@@ -1,34 +1,49 @@
 package core.models.routing_tries;
 
-import core.path_handler.HandlerWithParam;
-import core.path_handler.Handler;
 import core.consts.HttpMethod;
+import core.middleware.Middleware;
+import core.path_handler.Handler;
+import core.path_handler.HandlerWithParam;
+
+import java.util.ArrayList;
 
 public class URITries {
     Node root;
 
-    public URITries(Handler func){
+    public URITries(Handler func) {
         //The root path for serving
         this.root = new Node(HttpMethod.GET, "/", func);
     }
 
+    public URITries(){
+        this(null);
+    }
+
     //Register handler for get request
-    public void get(String endpoint, Handler func){
-        root.register(HttpMethod.GET, endpoint, func);
+    public void get(String endpoint, ArrayList<Middleware> middlewares, Handler func) {
+        root.register(HttpMethod.GET, endpoint, middlewares, func);
     }
 
     //Register handler for post request
-    public void post(String endpoint, Handler func){
-        root.register(HttpMethod.POST, endpoint, func);
+    public void post(String endpoint, ArrayList<Middleware> middlewares, Handler func) {
+        root.register(HttpMethod.POST, endpoint, middlewares, func);
     }
 
     //Register handler for delete request
-    public void delete(String endpoint, Handler func){
-        root.register(HttpMethod.DELETE, endpoint, func);
+    public void delete(String endpoint, ArrayList<Middleware> middlewares, Handler func) {
+        root.register(HttpMethod.DELETE, endpoint, middlewares, func);
+    }
+
+    public void put(String endpoint, ArrayList<Middleware> middlewares, Handler func) {
+        root.register(HttpMethod.PUT, endpoint, middlewares, func);
+    }
+
+    public void options(String endpoint, ArrayList<Middleware> middlewares, Handler func) {
+        root.register(HttpMethod.OPTIONS, endpoint, middlewares, func);
     }
 
     //Get the handler method based on the url endpoint
-    public HandlerWithParam find(HttpMethod method, String path){
+    public HandlerWithParam find(HttpMethod method, String path) {
         return root.find(method, path);
     }
 

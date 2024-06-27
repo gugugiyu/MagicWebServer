@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 public class RegexMatcher {
     /**
      * Method to find the first matched group in a string using a regex pattern.
+     *
      * @param input The input string to be searched.
      * @param regex The regex pattern to search with.
      * @return The first matched group, or null if no match is found.

@@ -2,49 +2,53 @@ package core.models.header;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import static core.models.Server.CRLF;
+import static core.consts.Misc.CRLF;
 
-public class Headers implements Iterable<Header>{
+public class Headers implements Iterable<Header> {
     ArrayList<Header> headers = new ArrayList<>();
 
 
-    public void add(Header newHeader){
-        if (!headers.contains(newHeader)){
+    public void add(Header newHeader) {
+        if (!headers.contains(newHeader)) {
             headers.add(newHeader);
-        }else{
+        } else {
             //We can overwrite it
             set(newHeader.key, newHeader.value);
         }
     }
 
-    public boolean set(String key, String newValue){
+    public void set(String key, String newValue) {
         //Trim out the key
-        if (key == null || key.isEmpty()){
-            return false;
+        if (key == null || key.isEmpty()) {
+            return;
         }
 
         //Iterate through the header list and remove the record with that key
         int headerLength = headers.size();
 
         for (int i = 0; i < headerLength; i++)
-            if (headers.get(i).key.equals(key)){
+            if (headers.get(i).key.equals(key)) {
                 headers.set(i, new Header(key, newValue));
-                return true;
             }
-
-        return false;
     }
 
-    public Header find(String key){
-        for (Header header : headers){
-            if (header.key.equals(key))
-                return header;
+    /**
+     * Find and return the header's value based on the key
+     *
+     * @param key the key to look for
+     * @return the {@code value} of the header if found, empty string {@code ""} if not found
+     */
+    public String find(String key) {
+        for (Header header : headers) {
+            if (header.key.equalsIgnoreCase(key))
+                return header.value;
         }
 
-        return null;
+        return "";
     }
 
     public void write(OutputStream out) throws IOException {
@@ -56,9 +60,9 @@ public class Headers implements Iterable<Header>{
         out.write(CRLF); // ends header block
     }
 
-    public boolean remove(String key){
+    public boolean remove(String key) {
         //Trim out the key
-        if (key == null || key.isEmpty()){
+        if (key == null || key.isEmpty()) {
             return false;
         }
 
@@ -66,7 +70,7 @@ public class Headers implements Iterable<Header>{
         int headerLength = headers.size();
 
         for (int i = 0; i < headerLength; i++)
-            if (headers.get(i).key.equals(key)){
+            if (headers.get(i).key.equals(key)) {
                 headers.remove(i);
                 return true;
             }
@@ -74,8 +78,46 @@ public class Headers implements Iterable<Header>{
         return false;
     }
 
+    /**
+     * Return the array list of all keys from the header list
+     * @return null if no header is presented, or array list of type String if convertible
+     */
+    public ArrayList<String> getKeyList(){
+        if (headers == null || headers.isEmpty())
+            return null;
+
+        ArrayList<String> retList = new ArrayList<>();
+
+        for (Header header : headers){
+            retList.add(header.getKey());
+        }
+
+        return retList;
+    }
+
+    /**
+     * Return the array list of all values from the header list
+     * @return null if no header is presented, or array list of type String if convertible
+     */
+    public ArrayList<String> getValueList(){
+        if (headers == null || headers.isEmpty())
+            return null;
+
+        ArrayList<String> retList = new ArrayList<>();
+
+        for (Header header : headers){
+            retList.add(header.getValue());
+        }
+
+        return retList;
+    }
+
     @Override
     public Iterator<Header> iterator() {
         return headers.iterator();
+    }
+
+    public ArrayList<Header> getHeaders() {
+        return headers;
     }
 }

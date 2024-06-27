@@ -1,57 +1,79 @@
 package core.models;
 
+import core.config.Config;
 import core.consts.HttpMethod;
+import core.consts.Misc;
 import core.models.header.Header;
 import core.models.header.Headers;
 
-import java.io.*;
+import javax.net.ssl.SSLSocket;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-import static core.models.Server.CRLF;
+import static core.consts.Misc.CRLF;
 
 public class Request {
     //Currently supporting methods are: GET, POST, DELETE
-    public HttpMethod method;
+    private HttpMethod method;
 
     //We're not supporting trailing headers
-    public Headers headers;
+    private final Headers headers;
 
-    public byte[] content;
+    private byte[] content;
 
-    public Socket requestSocket;
+    private final Socket requestSocket;
 
     //The part comes after the "?" symbol
     public Map<String, String> query;
-    
+
     //The route parameters (starts with ":")
     public Map<String, String> params;
 
-    public String version;
+    private String version;
 
     //The request path, without the request queryParams
-    public URI path;
+    private URI path;
 
-    public Request(Socket socket) throws IOException, IllegalArgumentException {
+    //For same site request, requestOrigin will typically be null, as the "Origin" header tends to be omitted.
+    private URI requestOrigin;
+
+    //Control flag to halt request parsing process when the protocol is mismatched
+    private boolean isMismatched;
+
+    /**
+     * This constructor will act as a parser for the incoming data from the connection socket
+     *
+     * @param socket the connection socket
+     * @throws IllegalArgumentException when the request failed to parse the receive data
+     * @throws SocketException when the request parse being invoked again with the do-while loop after finish the first request, response cycle
+     */
+    public Request(Socket socket) throws IOException, SocketException {
         InputStream data = socket.getInputStream();
 
         query = new HashMap<>();
         headers = new Headers();
 
         this.requestSocket = socket;
+
         extractData(data);
     }
 
     private void extractData(InputStream data) throws IOException, IllegalArgumentException {
         extractRequestLine(data);
-        extractHeaders(data);
-        extractBody(data);
 
-        //And close the InputStream
-        //data.close();
+        if (isMismatched && Config.SHOW_ERROR) System.err.printf("[-] %s Error: Protocol mismatched\n", requestSocket.getInetAddress());
+
+        if (!isMismatched){
+            extractHeaders(data);
+            extractBody(data);
+        }
     }
 
 
@@ -59,70 +81,77 @@ public class Request {
         //Parse the method, version and path from the request line;
         //Index: 0        1        2
         //Data : [method] [path]   [version]
-
         int c = data.read();
+        int firstSpaceIdx = 0;
+
         String requestLine = "";
 
         //While we're not at the EOF and the newline character
-        while (c != -1 && c != CRLF[1]) {
+        while (c != -1 && c != Misc.CRLF[1]) {
+            if (c != 32)
+                firstSpaceIdx++;
+
+            if (requestLine.length() == 7 && firstSpaceIdx == 0){
+                if (!validHttpMethod(requestLine.substring(0, firstSpaceIdx))){
+                    isMismatched = true;
+                    return;
+                }
+            }
+
             requestLine += (char) c;
             c = data.read();
         }
 
         String[] firstLineTokens = requestLine.split(" ");
 
-        if (firstLineTokens.length < 3){
+        if (firstLineTokens.length < 3) {
             //Invalid argument when parsing request line
-            throw new IllegalArgumentException("Invalid request line");
+            throw new IOException("[-] Request line not found");
         }
 
-        try{
-            method  = HttpMethod.valueOf(firstLineTokens[0].toUpperCase());
-        }catch (IllegalArgumentException e){
+        try {
+            method = HttpMethod.valueOf(firstLineTokens[0].toUpperCase());
+        } catch (IllegalArgumentException e) {
             //Use default GET in case we're unable to tell what request it is
-            method  = HttpMethod.GET;
+            method = HttpMethod.GET;
         }
 
-        path    = URI.create(firstLineTokens[1]);
+        path = URI.create(firstLineTokens[1]);
+
         version = firstLineTokens[2].substring(0, firstLineTokens[2].length() - 1); //Trim off the trailing "\r" from the CRLF combo
+        version = version.substring(version.indexOf("/") + 1);            //Trim off the "http" or "https" part
 
         //Setting the queryParams
         String queryStr = path.getQuery();
 
-        if (queryStr != null){
+        if (queryStr != null) {
             String[] queryTokens = queryStr.split("&");
 
-            for (String token : queryTokens){
+            for (String token : queryTokens) {
                 int delimIdx = token.indexOf("=");
 
                 //In case of key-only param, we'll treat it as a boolean flag
-                if (delimIdx == -1){
+                if (delimIdx == -1) {
                     query.put(token, "true");
-                }else{
+                } else {
                     query.put(token.substring(0, delimIdx), token.substring(delimIdx + 1));
                 }
             }
         }
-
-//        for (Map.Entry<String, String> entry : queryParams.entrySet()){
-//            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
-//        }
-
-        System.out.println("[+] Request parsed: " + version + " "  + method + " " + path.getPath());
     }
 
-    private void extractHeaders(InputStream data) throws IOException{
+    private void extractHeaders(InputStream data) throws IOException {
         //Parse the header pairs
         int c = data.read();
         String line = "";
 
         //While we're not at the EOF
-        while (c != -1){
+        while (c != -1) {
             //If we're not at the newline
-            if (c != CRLF[1]){
+            if (c != CRLF[1]) {
                 line += (char) c;
-            }else{
-                if (line.length() < 2 && (line.charAt(0) == 13)){
+            } else {
+                if (line.length() < 2 && (line.charAt(0) == 13)) {
                     //If we're at the empty line delimiter, then stop reading
                     break;
                 }
@@ -140,21 +169,27 @@ public class Request {
 
             c = data.read();
         }
+
+        //We can resolve the hostname here if the host header is available
+        String hostHeader = headers.find("Origin");
+
+        requestOrigin = URI.create(hostHeader);
     }
 
-    private void extractBody(InputStream data){
+    private void extractBody(InputStream data) {
         ByteArrayOutputStream returnStream = new ByteArrayOutputStream();
 
-        try{
+        try {
             //Http body from request side is optional, so we might need to check the input stream to see if there's any more character to read in
             int possibleReadWithoutBlocking = data.available();
 
-            if (possibleReadWithoutBlocking > 0){
-                for (int i = 0; i < possibleReadWithoutBlocking; i++){
+            if (possibleReadWithoutBlocking > 0) {
+                for (int i = 0; i < possibleReadWithoutBlocking; i++) {
                     returnStream.write(data.read());
                 }
             }
-        } catch (IOException ignored){}
+        } catch (IOException ignored) {
+        }
 
         this.content = returnStream.toByteArray();
     }
@@ -179,10 +214,6 @@ public class Request {
         return requestSocket;
     }
 
-    public Map<String, String> getQuery() {
-        return query;
-    }
-
     public String getVersion() {
         return version;
     }
@@ -191,7 +222,30 @@ public class Request {
         return path;
     }
 
-    public void setParams(Map<String, String> params) {
-        this.params = params;
+    public byte[] getContent() {
+        return content;
+    }
+
+    public URI getRequestOrigin() {
+        return requestOrigin;
+    }
+
+    public boolean isMismatched() {
+        return isMismatched;
+    }
+
+    public static boolean validHttpMethod(String test) {
+
+        for (HttpMethod c : HttpMethod.values()) {
+            if (c.name().equals(test)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void setMethod(HttpMethod method) {
+        this.method = method;
     }
 }

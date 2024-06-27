@@ -27,3 +27,11 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### GRADLE ###
+.gradle
+build/
+
+### SSL setting ###
+cert_data/*
+data/*

@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
 
 public class GZIPEncoder extends Encoder {
-    private GZIPOutputStream gzipStream;
-    private ByteArrayOutputStream streamBuffer;
+    private final GZIPOutputStream gzipStream;
+    private final ByteArrayOutputStream streamBuffer;
 
 
     public GZIPEncoder() throws IOException {
@@ -19,9 +19,14 @@ public class GZIPEncoder extends Encoder {
         //System.out.println("Before encode: " + length);
 
         //Compress and close the gzip stream
-        gzipStream.write(text, 0,  length);
+        gzipStream.write(text, 0, length);
         gzipStream.close();
 
         return streamBuffer.toByteArray();
+    }
+
+    @Override
+    public String toString() {
+        return "gzip";
     }
 }

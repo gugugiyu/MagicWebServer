@@ -1,5 +1,7 @@
 package core.encoder;
 
+import core.config.Config;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.Deflater;
@@ -13,22 +15,26 @@ public class DeflateEncoder extends Encoder {
 
     @Override
     public byte[] encode(byte[] text, int length) throws IOException {
+        ByteArrayOutputStream streamBuffer = new ByteArrayOutputStream();
+        byte[] buffer = new byte[Config.ENCODER_BUFFER_SIZE]; //Buffering compressed segments
+
         //System.out.println("Before encode: " + length);
         deflater.setInput(text);
 
         //Let it executes
         deflater.finish();
 
-        final int BUFFER_SIZE = 1 << 11; // 2048
-
-        ByteArrayOutputStream streamBuffer = new ByteArrayOutputStream();
-        byte[] buffer = new byte[BUFFER_SIZE]; //Buffering compressed segments
-
         while (!deflater.finished()) {
             int compressedSize = deflater.deflate(buffer, 0, buffer.length);
             streamBuffer.write(buffer, 0, compressedSize);
         }
 
+        deflater.end();
         return streamBuffer.toByteArray();
+    }
+
+    @Override
+    public String toString() {
+        return "deflate";
     }
 }

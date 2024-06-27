@@ -1,25 +1,26 @@
 package core.models.routing_tries;
 
-import core.path_handler.HandlerWithParam;
-import core.path_handler.Handler;
 import core.consts.HttpMethod;
+import core.middleware.Middleware;
+import core.path_handler.Handler;
+import core.path_handler.HandlerWithParam;
+import core.utils.Formatter;
 import core.utils.RegexMatcher;
-import core.utils.Trimmer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class Node {
+import static core.utils.Formatter.replaceEmptyWithRoot;
+
+public class Node implements Cloneable{
+    //Middleware to be called before the main handler
+    private List<Middleware> middlewares;
     //Endpoint token for this branch
     private String token;
-
-    //The handler that will be executed on matching this current route
+    //The handlers that will be executed on matching this current route
+    //This is acting as both the handler and the middleware (if passed multiple one, they will be called subsequently)
     private Handler nodeHandler;
-
     //The child
-    private ArrayList<Node> children;
+    private List<Node> children;
 
     //The type of HTTP method
     private HttpMethod httpMethod;
@@ -29,13 +30,18 @@ public class Node {
         this.token = token;
         this.nodeHandler = nodeHandler;
         children = new ArrayList<>();
+        middlewares = new ArrayList<>();
     }
 
-    public Handler getNodeHandler() {
+    public void setMiddleware(List<Middleware> middlewares){
+        this.middlewares = middlewares;
+    }
+
+    public Handler getNodeHandlers() {
         return nodeHandler;
     }
 
-    public void setNodeHandler(Handler nodeHandler) {
+    public void setNodeHandlers(Handler nodeHandler) {
         this.nodeHandler = nodeHandler;
     }
 
@@ -47,88 +53,58 @@ public class Node {
         this.httpMethod = httpMethod;
     }
 
-    public String getToken() {
-        return token;
-    }
 
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public ArrayList<Node> getChildren() {
-        return children;
-    }
-
-    public void setChildren(ArrayList<Node> children) {
-        this.children = children;
-    }
-
-    public void register(HttpMethod method, String endpoint, Handler nodeHandler) {
+    public void register(HttpMethod method, String endpoint, ArrayList<Middleware> middlewares, Handler nodeHandler) {
         //In case the endpoint contains the current URL token
         //For example, the endpoint: "/dog" will contain the root "/"
 
         //We'll probably needs to trim off the request header here as well
         endpoint = trimRequestParam(endpoint);
 
-        String[] tokens = endpoint.split("/");
-
-        if (tokens.length == 0){
-            //Endpoint is at the root "/", so split won't return anything probably
-            tokens = new String[]{"/"};
-        }
+        //Treat "/" as a token as well
+        String[] tokens = endpoint.equals("/") ? new String[]{"/"} : replaceEmptyWithRoot(endpoint.split("/", 0));
 
         TraverseNode tNode = new TraverseNode(method, endpoint, nodeHandler);
-        Node node = tNode.traverse(this, endpoint, true);
+        Node node = tNode.registerTraverse(this, tokens);
 
-        if (tNode.depthLayer == tokens.length) {
-            //In this case, the traversing node manage to reach the max depth of the tries
-            //In other words, it traverses the whole endpoint route sufficiently
-            //We'll just have to update the handler and method in this case
+        if (node.getHttpMethod() == method && tNode.depthLayer == tokens.length) {
+            if (middlewares != null)
+                node.setMiddleware(middlewares);
 
-            //This case typically occurs when the user re-register the same route but with different handler and method
-            node.setNodeHandler(nodeHandler);
+            node.setNodeHandlers(nodeHandler);
             node.setHttpMethod(method);
-        } else {
-            //We continue with the remaining tokens, adding new node with null handler for each nested token
 
-            for (int i = tNode.depthLayer; i < tokens.length - 1; i++) {
-                Node newNode = new Node(method, tokens[i], null);
-                if (tokens[i].contains("*")){
-                    //We want the wildcard to be evaluated at last after all the routes have been checked
-                    node.children.add(newNode);
+            return;
+        }
 
-                    //Usually, we won't have to do this, as the wildcard indicates it will match all the case after it, we'll have no more token to iterate through
-                    node = node.children.getLast();
-                }else{
-                    node.children.addFirst(newNode);
+        if (tokens.length == 1 && tokens[0].equals("/") && method != node.getHttpMethod()){
+            //Edge case: different method (besides GET) for root path will be treated as the root path's child
+            node.children.add(new Node(method, "/", nodeHandler));
+            return;
+        }
 
-                    //Navigate to next node
-                    node = node.children.getFirst();
-                }
-            }
+        //We continue with the remaining tokens, adding new node with null handler for each nested token
 
-            //And for the last token, we'll simply create the node with the main handler
-            //Same with above
-            if (tokens[tokens.length - 1].contains("*")){
-                node.children.add(new Node(method, tokens[tokens.length - 1], nodeHandler));
-            }else{
-                node.children.addFirst(new Node(method, tokens[tokens.length - 1], nodeHandler));
+        for (int i = tNode.depthLayer; i < tokens.length; i++) {
+            Node newNode = new Node(
+                    method,
+                    tokens[i],
+                    (i == tokens.length - 1) ? nodeHandler : null //Unless it's the final token, we won't add any handler for the sub-token
+            );
+
+            if (tokens.length < 2 && tokens[i].startsWith("*")) {
+                /* Match all case should be evaluated last */
+                node.children.addLast(newNode);
+                node = node.children.getLast();
+            } else {
+                node.children.addFirst(newNode);
+                node = node.children.getFirst();
             }
         }
 
+        if (middlewares != null)
+            node.setMiddleware(middlewares);
     }
-
-    private String trimRequestParam(String endpoint) {
-        endpoint = endpoint.trim();
-        endpoint = Trimmer.trimLeft(endpoint, '/');
-        endpoint = Trimmer.trimRight(endpoint, '/');
-
-        //This helps with the split as our iterator starts at 1, so we need an extra "" to skip (represents the root node)
-        endpoint = "/" + endpoint;
-
-        return endpoint;
-    }
-
 
     public HandlerWithParam find(HttpMethod method, String endpoint) {
         if (endpoint == null) {
@@ -136,103 +112,136 @@ public class Node {
             return null;
         }
 
+        String[] tokens = endpoint.equals("/") ? new String[]{"/"} : replaceEmptyWithRoot(endpoint.split("/", 0));
+
         endpoint = trimRequestParam(endpoint);
 
         TraverseNode tNode = new TraverseNode(method, endpoint, null);
-        Node node = tNode.traverse(this, endpoint, false);
+        Node node = tNode.findTraverse(this, tokens);
 
-        if (!endpoint.equals("/") && node.token.equals("/")){
-            //This case is to prevent registered root being called when another endpoint is requested but no handler is found
-            node.setNodeHandler(null);
-        }
+       if (node == null){
+           return new HandlerWithParam(
+                   null, new HashMap<>(), null
+           );
+       }
 
-        return new HandlerWithParam(node.nodeHandler, tNode.params);
+        return new HandlerWithParam(
+                 node.nodeHandler,
+                tNode.params,
+                node.middlewares
+        );
+    }
+
+    private String trimRequestParam(String endpoint) {
+        endpoint = endpoint.trim();
+        endpoint = Formatter.trimLeft(endpoint, '/');
+        endpoint = Formatter.trimRight(endpoint, '/');
+
+        //This helps with the split as our iterator starts at 1, so we need an extra "" to skip (represents the root node)
+        endpoint = "/" + endpoint;
+
+        return endpoint;
     }
 
     private static class TraverseNode extends Node {
+        protected final Map<String, String> params;
         protected int depthLayer;
-
         //Track the path from the wildcard token to the furthest endpoint
         protected String wildcardPath;
 
-        protected Map<String, String> params;
-
-        //Constructor used for register function, which doesn't care about the route params and wildcard
         public TraverseNode(HttpMethod method, String endpoint, Handler nodeHandler) {
             super(method, endpoint, nodeHandler);
             params = new HashMap<>();
             wildcardPath = "";
         }
+
+
+        private Node registerTraverse(Node root, String[] tokens){
+            Node returnNode   = root;
+            int  iterator     = 1;
+
+            while (iterator < tokens.length) {
+                boolean isMatched = false;
+                String compareStr = tokens[iterator];
+
+                for (Node child : returnNode.children) {
+                    if (!child.getHttpMethod().equals(getHttpMethod()))
+                        continue;
+
+                    if (child.token.startsWith(":") && (":" + compareStr).equals(child.token))
+                        isMatched = true;
+
+                    else if (tokens[iterator].equals(child.token))
+                        isMatched = true;
+
+                    if (isMatched) {
+                        returnNode = child; //Advance to the child
+                        break;
+                    }
+                }
+
+                if (!isMatched) break;
+
+                iterator++;
+            }
+
+            depthLayer = iterator;
+            return returnNode;
+        }
+
         /**
          * Traverses the URL routing trie structure to find the deepest node reachable by tokenizing the endpoint.
          *
-         * @param endpoint the URL endpoint to traverse, using "/" as the delimiter to split the path.
-         * @param isRegister flag tells if the current traverse method is being used for registering or not. Use to avoid mapping into wildcard case
+         * @param tokens   the URL endpoint to traverse, using "/" as the delimiter to split the path.
          * @return the deepest node that can be reached by following the tokens in the endpoint.
          */
-        private Node traverse(Node root, String endpoint, boolean isRegister) {
-            // Split the endpoint into tokens using "/" as the delimiter
-            String[] tokens = endpoint.split("/", 0);
+        private Node findTraverse(Node root, String[] tokens) {
+            //Small optimization to skip the loop in case the root path is requested
+            if (tokens.length == 1 && getHttpMethod() == root.getHttpMethod())
+                return root;
 
-            // Start traversal from the current node (this)
+            boolean isFound = false;
             Node returnNode = root;
+            int  iterator   = 1;
 
-            //Offsetting by 1 so we don't have to traverse the root node again
-            int iterator = 1;
+            //Offsetting by 1, so we don't have to traverse the root node again
 
-            // Traverse the trie until the end of tokens or until traversal is no longer possible
             while (iterator < tokens.length) {
-                String splitToken = tokens[iterator];
+                String compareStr = tokens[iterator];
 
                 boolean isMatched = false;
 
-                //Since we'll need to match everything after the wildcard, so if it exists, and we don't have anymore children to traverse through
-                //We simply return the remaining path
-
-                // Iterate through the children of the current node
                 for (Node child : returnNode.children) {
-                    //Check the method
-                    if (!child.getHttpMethod().equals(getHttpMethod())){
+                    if (!child.getHttpMethod().equals(getHttpMethod()))
                         continue;
-                    }
 
-                    String group = isChildTokenRegex(splitToken, child.token);
+                    if (child.token.contains("*")) {
+                        //Regexes also have asterisk, but they're interpreted differently
+                        //So we'll have make sure which one is matching here
 
-                    if (!isRegister && child.token.contains("*")) {
-                        //Some regex will have the asterisk
-                        //So when traversing we not only need to check if it matches the wildcard case but the regex case also
-                        isMatched = (group != null || handleWildcard(child.token, splitToken));
-
-                        //Start tracking the path from here
-                        String[] remainingTokens = Arrays.copyOfRange(tokens, iterator, tokens.length);
-                        String   joinedEndpoint  = String.join("/", remainingTokens);
-
-                        wildcardPath = wildcardPath + "/" + joinedEndpoint;
-                    } else if (child.token.startsWith(":")) {
-                        //Route paramameter handling
-                        String normalizedToken = child.token.substring(1); //Remove the ":" from the registered route param
-                        params.put(normalizedToken, splitToken);
+                        isMatched = handleWildcard(iterator, tokens, child.token, compareStr)
+                                    || isChildTokenRegex(compareStr, child.token) != null;
+                    } else if (child.token.startsWith(":") && child.token.length() > 1) {
+                        //Route parameter without name will be treated as literal string ":"
+                        //Route parameter handling
+                        //Starts at 1 to skip the colon (":")
+                        params.put(child.token.substring(1), compareStr);
 
                         isMatched = true;
                     } else {
-                        // Regex matching and raw matching as well. As regex can't detect when raw routing path is given
-                        // For example, if you register index.html with a static file handler
-                        // Requesting index.css will also trigger the above route as they're matched from the word "index"
-
-                        if (group != null && splitToken.equals(child.token))
+                        if (compareStr.equals(child.token))
                             isMatched = true;
                     }
 
                     if (isMatched) {
-                        returnNode = child;
+                        returnNode = child; //Advance to the child
+                        isFound = true;
                         break;
                     }
                 }
 
                 // If no matching child is found, return the current node
-                if (!isMatched) {
-                    break;
-                }
+                if (!isMatched) break;
 
                 // Move to the next token
                 iterator++;
@@ -241,14 +250,14 @@ public class Node {
             depthLayer = iterator;
 
             //Add the wildcard path so far as part of the params
-            if (params != null)
+            if (params != null && !wildcardPath.isEmpty())
                 params.put("wildcard", wildcardPath);
 
             // Return the deepest node reached
-            return returnNode;
+            return isFound ? returnNode : null;
         }
 
-        private boolean handleWildcard(String wildcardToken, String splitToken) {
+        private boolean handleWildcard(int iterator, String[] tokens, String wildcardToken, String splitToken) {
             //Wildcard handling
             int wildCardIdx = wildcardToken.indexOf("*");
 
@@ -261,25 +270,43 @@ public class Node {
             if (wildCardIdx + 1 <= wildcardToken.length())
                 suffix = wildcardToken.substring(wildCardIdx + 1);
 
-            return splitToken.startsWith(prefix) && splitToken.endsWith(suffix);
+            if (splitToken.startsWith(prefix) && splitToken.endsWith(suffix)){
+                String[] remainingTokens = Arrays.copyOfRange(tokens, iterator, tokens.length);
+                String joinedEndpoint = String.join("/", remainingTokens);
+
+                wildcardPath = wildcardPath + "/" + joinedEndpoint;
+
+                return true;
+            }
+
+            return false;
         }
 
-        private String isChildTokenRegex(String splitToken, String childToken ){
+        private String isChildTokenRegex(String splitToken, String childToken) {
             RegexMatcher regexMatcher = new RegexMatcher();
 
             String retGroup;
 
-            if (childToken.startsWith(":")){
+            if (childToken.startsWith(":")) {
                 //Regex can also be used in route parameter, and is encapsulated between parentheses (())
                 //If the route was syntactically correct, the closing parenthesis should be at the last index
                 String regexPart = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
 
                 retGroup = regexMatcher.check(splitToken, regexPart);
-            }else{
+            } else {
                 retGroup = regexMatcher.check(splitToken, childToken);
             }
 
             return retGroup;
+        }
+    }
+
+    @Override
+    protected Node clone() {
+        try {
+            return (Node) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
         }
     }
 }

@@ -5,24 +5,101 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b181e3de-53ea-4041-80aa-c87493e13298" name="Changes" comment="Initial Commit, check TodoList.md">
+      <change afterPath="$PROJECT_DIR$/cert_data/conf.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cert_data/myCertRequest2.csr" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cert_data/myPrivateKey.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cert_data/myPrivateKey2.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cert_data/out.p12" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cert_data/server.crt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/config/Config.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/models/ChunkedOutputStream.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/models/threads/TransactionThread.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/path_handler/EchoPathHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/utils/Formatter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ssl/models/SSLServer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ssl/validator/SSLValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MagicWebServer.iml" beforeDir="false" afterPath="$PROJECT_DIR$/MagicWebServer.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TodoList.md" beforeDir="false" afterPath="$PROJECT_DIR$/TodoList.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/consts/HttpCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/consts/HttpCode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/encoder/DeflateEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/DeflateEncoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/encoder/EncoderFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/EncoderFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/encoder/GZIPEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/GZIPEncoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/Request.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/Request.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/Response.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/Response.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/Server.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/header/Headers.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/header/Headers.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/routing_tries/Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/routing_tries/Node.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/routing_tries/URITries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/routing_tries/URITries.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/threads/HttpThread.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/threads/ShutdownThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/threads/ShutdownThread.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/threads/TimeoutThread.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/path_handler/Handler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/Handler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/path_handler/HandlerWithParam.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/HandlerWithParam.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/path_handler/StaticFileHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/StaticFileHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/path_handler/TimeoutHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/utils/FileAttributeRetriever.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/utils/FileAttributeRetriever.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/utils/RegexMatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/utils/RegexMatcher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/utils/Trimmer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/index.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/test.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/w3images/hamburger.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/w3images/tablesetting.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/w3images/tablesetting2.jpg" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
         <option value="Interface" />
+        <option value="JUnit5 Test Class" />
         <option value="Class" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/core/models/Request.java" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -35,55 +112,136 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Main.executor": "Run",
-    "Downloaded.Files.Path.Enabled": "false",
-    "Repository.Attach.Annotations": "false",
-    "Repository.Attach.JavaDocs": "false",
-    "Repository.Attach.Sources": "false",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/nguye/Magic/Education/Funix/Network/MagicWebServer",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "onboarding.tips.debug.path": "C:/Users/nguye/Magic/Education/Funix/Network/PackageTransmission/src/Main.java",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.javacompiler",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;true&quot;,
+    &quot;Gradle.Build MagicWebServer.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ServerTest.butterflyman.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ServerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ServerTest.root.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ServerTest.testGetRoot.executor&quot;: &quot;Debug&quot;,
+    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary&quot;: &quot;JUnit5&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5&quot;: &quot;&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.preview.features.used&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/nguye/Magic/Education/Funix/Network/MagicWebServer/data&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/nguye/Magic/Education/Funix/Network/PackageTransmission/src/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\nguye\Magic\Education\Funix\Network\MagicWebServer\data" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission\src\data\w3images" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission\src\data\dir" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission\src\data" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\nguye\Magic\Education\Funix\Network\MagicWebServer" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission\src\data" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission\src" />
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\PackageTransmission" />
     </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="core.models.server" />
+    </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.Main">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="D:/Program Files/Java" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <envs>
+        <env name="verbose" value="true" />
+      </envs>
       <option name="MAIN_CLASS_NAME" value="Main" />
       <module name="MagicWebServer" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ServerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ServerTest.butterflyman" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
+      <option name="METHOD_NAME" value="butterflyman" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ServerTest.root" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
+      <option name="METHOD_NAME" value="root" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.Main" />
+      <item itemvalue="JUnit.ServerTest.butterflyman" />
+      <item itemvalue="JUnit.ServerTest.root" />
+      <item itemvalue="JUnit.ServerTest" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Application.Main" />
+        <item itemvalue="JUnit.ServerTest" />
+        <item itemvalue="JUnit.ServerTest.butterflyman" />
+        <item itemvalue="JUnit.ServerTest.root" />
       </list>
     </recent_temporary>
   </component>
@@ -164,6 +322,116 @@
       <workItem from="1718118666568" duration="86000" />
       <workItem from="1718118783993" duration="370000" />
       <workItem from="1718119853868" duration="225000" />
+      <workItem from="1718120580700" duration="703000" />
+      <workItem from="1718161912012" duration="240000" />
+      <workItem from="1718174277290" duration="9221000" />
+      <workItem from="1718183632306" duration="216000" />
+      <workItem from="1718198411540" duration="481000" />
+      <workItem from="1718199527604" duration="115000" />
+      <workItem from="1718245198156" duration="99000" />
+      <workItem from="1718245388296" duration="12000" />
+      <workItem from="1718245445297" duration="209000" />
+      <workItem from="1718245747102" duration="942000" />
+      <workItem from="1718246774734" duration="97000" />
+      <workItem from="1718246895472" duration="1061000" />
+      <workItem from="1718248153211" duration="4455000" />
+      <workItem from="1718252684834" duration="8000" />
+      <workItem from="1718252983781" duration="33000" />
+      <workItem from="1718253245589" duration="272000" />
+      <workItem from="1718253779637" duration="59000" />
+      <workItem from="1718253947328" duration="42000" />
+      <workItem from="1718254069638" duration="59000" />
+      <workItem from="1718254213336" duration="119000" />
+      <workItem from="1718254408752" duration="804000" />
+      <workItem from="1718255253706" duration="143000" />
+      <workItem from="1718255409768" duration="170000" />
+      <workItem from="1718255600050" duration="36000" />
+      <workItem from="1718255943125" duration="99000" />
+      <workItem from="1718256118227" duration="36000" />
+      <workItem from="1718256170521" duration="207000" />
+      <workItem from="1718256446559" duration="101000" />
+      <workItem from="1718256635520" duration="26000" />
+      <workItem from="1718256676572" duration="670000" />
+      <workItem from="1718257363040" duration="649000" />
+      <workItem from="1718258037060" duration="504000" />
+      <workItem from="1718258578904" duration="30000" />
+      <workItem from="1718258632139" duration="741000" />
+      <workItem from="1718259419689" duration="103000" />
+      <workItem from="1718259586525" duration="33000" />
+      <workItem from="1718259635135" duration="23000" />
+      <workItem from="1718259701444" duration="41000" />
+      <workItem from="1718259752732" duration="16000" />
+      <workItem from="1718259785271" duration="111000" />
+      <workItem from="1718283442848" duration="20000" />
+      <workItem from="1718283514558" duration="235000" />
+      <workItem from="1718283826019" duration="20000" />
+      <workItem from="1718283869667" duration="325000" />
+      <workItem from="1718284216751" duration="167000" />
+      <workItem from="1718284414661" duration="338000" />
+      <workItem from="1718284817643" duration="194000" />
+      <workItem from="1718285026636" duration="1196000" />
+      <workItem from="1718286420657" duration="3524000" />
+      <workItem from="1718291983046" duration="202000" />
+      <workItem from="1718292201656" duration="1180000" />
+      <workItem from="1718293404237" duration="128000" />
+      <workItem from="1718333628211" duration="1833000" />
+      <workItem from="1718335480155" duration="283000" />
+      <workItem from="1718335783010" duration="321000" />
+      <workItem from="1718336116694" duration="33000" />
+      <workItem from="1718336155445" duration="82000" />
+      <workItem from="1718336250959" duration="10000" />
+      <workItem from="1718336263814" duration="23000" />
+      <workItem from="1718336301608" duration="7648000" />
+      <workItem from="1718343991434" duration="243000" />
+      <workItem from="1718344271667" duration="238000" />
+      <workItem from="1718344557055" duration="765000" />
+      <workItem from="1718354196864" duration="2061000" />
+      <workItem from="1718424296355" duration="7025000" />
+      <workItem from="1718459793386" duration="6402000" />
+      <workItem from="1718511277954" duration="4453000" />
+      <workItem from="1718544981203" duration="7781000" />
+      <workItem from="1718589797441" duration="48000" />
+      <workItem from="1718589932851" duration="167000" />
+      <workItem from="1718590110582" duration="309000" />
+      <workItem from="1718590433414" duration="9000" />
+      <workItem from="1718590464264" duration="551000" />
+      <workItem from="1718591131421" duration="922000" />
+      <workItem from="1718592155466" duration="1406000" />
+      <workItem from="1718593614271" duration="2009000" />
+      <workItem from="1718595686171" duration="2577000" />
+      <workItem from="1718692661427" duration="96000" />
+      <workItem from="1718722065029" duration="39000" />
+      <workItem from="1718722345530" duration="3235000" />
+      <workItem from="1718761627704" duration="8778000" />
+      <workItem from="1718849319398" duration="5117000" />
+      <workItem from="1718854605241" duration="662000" />
+      <workItem from="1718855288662" duration="1703000" />
+      <workItem from="1718864259948" duration="9000" />
+      <workItem from="1718864811371" duration="666000" />
+      <workItem from="1718894860330" duration="44000" />
+      <workItem from="1718895291372" duration="1397000" />
+      <workItem from="1718942305207" duration="7355000" />
+      <workItem from="1718957307322" duration="1215000" />
+      <workItem from="1718980484460" duration="1829000" />
+      <workItem from="1718982379112" duration="2668000" />
+      <workItem from="1719033763493" duration="3537000" />
+      <workItem from="1719048104177" duration="1289000" />
+      <workItem from="1719067298895" duration="4766000" />
+      <workItem from="1719113313497" duration="7052000" />
+      <workItem from="1719130054401" duration="1284000" />
+      <workItem from="1719148966184" duration="541000" />
+      <workItem from="1719216921569" duration="380000" />
+      <workItem from="1719217332327" duration="3017000" />
+      <workItem from="1719299216117" duration="1578000" />
+      <workItem from="1719301312578" duration="336000" />
+      <workItem from="1719301900133" duration="1566000" />
+      <workItem from="1719364392649" duration="1337000" />
+      <workItem from="1719365911566" duration="119000" />
+      <workItem from="1719366081627" duration="4770000" />
+      <workItem from="1719385891035" duration="632000" />
+      <workItem from="1719386588485" duration="5448000" />
+      <workItem from="1719406556476" duration="1456000" />
+      <workItem from="1719451891062" duration="2959000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Commit, check TodoList.md">
       <option name="closed" value="true" />
@@ -173,35 +441,84 @@
       <option name="project" value="LOCAL" />
       <updated>1718120013386</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Initial Commit, check TodoList.md">
+      <option name="closed" value="true" />
+      <created>1718120640489</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1718120640489</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Initial Commit, check TodoList.md">
+      <option name="closed" value="true" />
+      <created>1718121052658</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1718121052658</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Initial Commit, check TodoList.md" />
     <option name="LAST_COMMIT_MESSAGE" value="Initial Commit, check TodoList.md" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.security.KeyManagementException" package="java.security" />
+          <option name="timeStamp" value="4" />
+        </breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.StackOverflowError" package="java.lang" />
+          <option name="timeStamp" value="69" />
+        </breakpoint>
         <line-breakpoint enabled="true" type="java-method">
-          <url>file://$PROJECT_DIR$/src/core/models/routing_tries/Node.java</url>
-          <line>132</line>
-          <properties class="core.models.routing_tries.Node" method="find">
+          <url>file://$PROJECT_DIR$/src/core/models/threads/TransactionThread.java</url>
+          <line>268</line>
+          <properties class="core.models.threads.TransactionThread" method="handleTrace">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
-          <option name="timeStamp" value="31" />
+          <option name="timeStamp" value="68" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/core/models/Response.java</url>
+          <line>522</line>
+          <option name="timeStamp" value="73" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
+        <PinnedItemInfo parentTag="core.models.routing_tries.Node" memberName="children" />
         <PinnedItemInfo parentTag="models.Request" memberName="version" />
         <PinnedItemInfo parentTag="models.Node" memberName="func" />
+        <PinnedItemInfo parentTag="sun.security.ssl.SSLServerSocketImpl" memberName="socketLock" />
+        <PinnedItemInfo parentTag="core.models.Request" memberName="requestOrigin" />
       </pinned-members>
     </pin-to-top-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/MagicWebServer$ServerTest.ic" NAME="ServerTest Coverage Results" MODIFIED="1718338283718" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>core.models.server.*</FILTER>
+    </SUITE>
   </component>
 </project>

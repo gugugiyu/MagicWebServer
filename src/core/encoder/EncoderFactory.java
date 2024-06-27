@@ -3,10 +3,9 @@ package core.encoder;
 import java.io.IOException;
 
 public class EncoderFactory {
-    public static boolean isImplemented(String encodingType){
+    public static boolean isImplemented(String encodingType) {
         return switch (encodingType) {
-            case "gzip" -> true;
-            case "deflate" -> true;
+            case "gzip", "deflate" -> true;
             default -> false;
         };
     }
