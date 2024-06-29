@@ -71,6 +71,9 @@ public class TransactionThread implements Runnable{
      * Should only be called when wish to interrupt the current thread after {@value Config#THREAD_TIMEOUT_DURATION} seconds (set by the @code THREAD_TIMEOUT_DURATION)
      */
     public void end(){
+        if (res == null)
+            return;
+
         res.sendError(HttpCode.INTERNAL_SERVER_ERROR);
 
 
@@ -91,7 +94,7 @@ public class TransactionThread implements Runnable{
 
     private void handleConnection(Socket sock) throws IOException {
         if (sock instanceof SSLSocket){
-            ((SSLSocket) sock).addHandshakeCompletedListener(_ -> isHandshakeCompleted = true);
+            ((SSLSocket) sock).addHandshakeCompletedListener((ignored) -> isHandshakeCompleted = true);
         }else{
             //HTTP doesn't have ssl handshake, simply skip this step
             isHandshakeCompleted = true;
@@ -164,17 +167,17 @@ public class TransactionThread implements Runnable{
 
     protected void handleDefaultMethod() throws IOException {
         switch (req.getMethod()){
-            case HttpMethod.GET:
+            case GET:
                 new StaticFileHandler(req.getPath().getPath()).handle(req, res);
                 break;
 
-            case HttpMethod.HEAD:
+            case HEAD:
                 req.setMethod(HttpMethod.GET);
                 res.setDiscardBody(true);
                 handleDefaultMethod(); //Recurse this function with GET method
                 break;
 
-            case HttpMethod.TRACE:
+            case TRACE:
                 handleTrace();
                 break;
 
@@ -221,6 +224,7 @@ public class TransactionThread implements Runnable{
                 res.sendError(HttpCode.BAD_REQUEST, "Invalid request: " + t.getMessage());
             }
         } else {
+            t.printStackTrace();
             res.sendError(HttpCode.INTERNAL_SERVER_ERROR, "Error processing request: " + t.getMessage());
         }
     }

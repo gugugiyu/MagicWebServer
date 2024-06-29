@@ -21,7 +21,7 @@ public class Node implements Cloneable{
     //This is acting as both the handler and the middleware (if passed multiple one, they will be called subsequently)
     private Handler nodeHandler;
     //The child
-    private final List<Node> children;
+    private final LinkedList<Node> children;
 
     //The type of HTTP method
     private HttpMethod httpMethod;
@@ -30,7 +30,7 @@ public class Node implements Cloneable{
         this.httpMethod = method;
         this.token = token;
         this.nodeHandler = nodeHandler;
-        children = new ArrayList<>();
+        children = new LinkedList<>();
         middlewares = new ArrayList<>();
     }
 
@@ -213,7 +213,7 @@ public class Node implements Cloneable{
                 isMatched = false;
 
                 for (Node child : returnNode.children) {
-                    isRegexMatched = !isChildTokenRegex(compareStr, child.token).isEmpty();
+                    isRegexMatched = isChildTokenRegex(compareStr, child.token) != null;
 
                     if (!child.getHttpMethod().equals(getHttpMethod()))
                         continue;
@@ -296,13 +296,12 @@ public class Node implements Cloneable{
                 //Regex can also be used in route parameter, and is encapsulated between parentheses (())
                 //If the route was syntactically correct, the closing parenthesis should be at the last index
                 childToken = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
-
             }
 
             try {
                 retGroup = regexMatcher.check(splitToken, childToken);
             } catch (PatternSyntaxException e) {
-                return ""; //Invalid regex, or regex isn't provided
+                return null; //Invalid regex, or regex isn't provided
             }
 
             return retGroup;

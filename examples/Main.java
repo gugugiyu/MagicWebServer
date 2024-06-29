@@ -1,5 +1,6 @@
 package examples;
 
+import core.config.Config;
 import core.middleware.Cors;
 import core.middleware.Logger;
 import core.middleware.Middleware;
@@ -7,10 +8,10 @@ import core.models.server.Server;
 import core.path_handler.StaticFileHandler;
 
 public class Main {
-    public static void main() {
+    public static void main(String[] args) {
         Server app = new Server(3000);
 
-        //This route path will match requests to the root route, /.
+        System.out.println(Config.ROOT_DIR);
 
         app.get("/", new Middleware[]{new Cors(app), new Logger()}, (req, res) -> {
             res.send("root");
@@ -55,10 +56,6 @@ public class Main {
         });
 
         app.get("/index", new StaticFileHandler("./song.html"));
-
-        /*app.get("/*", new Middleware[]{new Cors(app), new Logger(), new Logger(), new Logger()}, (req, res) -> {
-            res.send("Matches all!");
-        });*/
 
         app.get("/download", (req, res) -> {
             res.download("./song.mp4", "song.mp4");

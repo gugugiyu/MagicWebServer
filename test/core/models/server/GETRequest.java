@@ -1,5 +1,6 @@
 package core.models.server;
 
+import core.consts.HttpCode;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -141,11 +142,12 @@ class GETRequest {
         serverThread.start();
 
         //Please create and call the method to fetch at the endpoint here
-        ConnectionTest.Should_Serve_404(
+        ConnectionTest.Should_Serve_Expected_Code(
                 "http",
                 "localhost",
                 ConnectionTest.HTTP_PORT,
-                TEST_URL
+                TEST_URL,
+                HttpCode.NOT_FOUND
         );
 
         serverThread.interrupt();
@@ -197,11 +199,12 @@ class GETRequest {
         serverThread.start();
 
         //Please create and call the method to fetch at the endpoint here
-        ConnectionTest.Should_Serve_404(
+        ConnectionTest.Should_Serve_Expected_Code(
                 "http",
                 "localhost",
                 ConnectionTest.HTTP_PORT,
-                TEST_URL
+                TEST_URL,
+                HttpCode.NOT_FOUND
         );
 
         serverThread.interrupt();
@@ -265,11 +268,39 @@ class GETRequest {
         EMPLOYEE_ID = -12; //fail this case
         TEST_URL = "/about/employee/" + EMPLOYEE_ID;
 
-        ConnectionTest.Should_Serve_404(
+        ConnectionTest.Should_Serve_Expected_Code(
                 "http",
                 "localhost",
                 ConnectionTest.HTTP_PORT,
-                TEST_URL
+                TEST_URL,
+                HttpCode.NOT_FOUND
+        );
+
+        serverThread.interrupt();
+    }
+
+    @Test
+    void infinityLoop(){
+        //Mock up an freezing inside the worker thread execution, thus force the server to time out the request
+        final String TEST_URL = "/infiniteLoop";
+
+        //GET request
+        Server app = new Server(ConnectionTest.HTTP_PORT);
+
+        app.get(TEST_URL, (req, res) -> {
+            while(true){}
+        });
+
+        Thread serverThread = new Thread(app);
+        serverThread.start();
+
+        //Please create and call the method to fetch at the endpoint here
+        ConnectionTest.Should_Serve_Expected_Code(
+                "http",
+                "localhost",
+                ConnectionTest.HTTP_PORT,
+                TEST_URL,
+                HttpCode.INTERNAL_SERVER_ERROR
         );
 
         serverThread.interrupt();

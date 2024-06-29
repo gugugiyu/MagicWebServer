@@ -207,7 +207,7 @@ public class Response implements Closeable {
             String semanticPath = processSemanticPath();
             System.out.printf("[+] %-30s %5d %-50s %3d %-35s %8s\n",
                     Formatter.convertTime(new Date()),
-                    Thread.currentThread().threadId(),
+                    Thread.currentThread().getId(),
                     semanticPath,
                     status,
                     statuses[status],

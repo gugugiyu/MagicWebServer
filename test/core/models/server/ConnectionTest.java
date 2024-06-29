@@ -27,22 +27,20 @@ public class ConnectionTest {
         return connection;
     }
 
-    public static boolean Should_Serve_404(String scheme, String host, int port, String resource) {
+    public static void Should_Serve_Expected_Code(String scheme, String host, int port, String resource, int code) {
         String urlString = scheme + "://" + host + ":" + port + resource;
 
         try {
             HttpURLConnection connection = setupConnection(urlString);
 
             int responseCode = connection.getResponseCode();
-            if (responseCode == 404) {
-                return true;
-            }
+
+            assertEquals(code, responseCode, "Different response code!");
         } catch (IOException e) {
             System.err.println("Exception: " + e.getMessage());
         } catch (URISyntaxException e) {
             System.err.println("Invalid URI syntax, tester's fault");
         }
-        return false;
     }
 
     public static boolean Should_Serve_Expected_Content(String scheme, String host, int port, String resource, String expectedContent) {
