@@ -5,56 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b181e3de-53ea-4041-80aa-c87493e13298" name="Changes" comment="Initial Commit, check TodoList.md">
-      <change afterPath="$PROJECT_DIR$/cert_data/conf.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cert_data/myCertRequest2.csr" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cert_data/myPrivateKey.key" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cert_data/myPrivateKey2.key" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cert_data/out.p12" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cert_data/server.crt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/config/Config.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/models/ChunkedOutputStream.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/models/threads/TransactionThread.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/path_handler/EchoPathHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/utils/Formatter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ssl/models/SSLServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ssl/validator/SSLValidator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/core/models/server/ConnectionTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/core/models/server/GETRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MagicWebServer.iml" beforeDir="false" afterPath="$PROJECT_DIR$/MagicWebServer.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TodoList.md" beforeDir="false" afterPath="$PROJECT_DIR$/TodoList.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/consts/HttpCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/consts/HttpCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/encoder/DeflateEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/DeflateEncoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/encoder/EncoderFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/EncoderFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/encoder/GZIPEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/encoder/GZIPEncoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/Request.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/Request.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/Response.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/Response.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/Server.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/header/Headers.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/header/Headers.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/examples/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/models/routing_tries/Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/routing_tries/Node.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/routing_tries/URITries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/routing_tries/URITries.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/threads/HttpThread.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/threads/ShutdownThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/threads/ShutdownThread.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/models/threads/TimeoutThread.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/path_handler/Handler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/Handler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/path_handler/HandlerWithParam.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/HandlerWithParam.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/path_handler/StaticFileHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/path_handler/StaticFileHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/path_handler/TimeoutHandler.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/utils/FileAttributeRetriever.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/utils/FileAttributeRetriever.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/models/server/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/models/server/Server.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/utils/RegexMatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/utils/RegexMatcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/utils/Trimmer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/favicon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/index.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/test.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/w3images/hamburger.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/w3images/tablesetting.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/w3images/tablesetting2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/core/models/server/ServerTest.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,8 +45,8 @@
         <option value="Enum" />
         <option value="Interface" />
         <option value="JUnit5 Test Class" />
-        <option value="Class" />
         <option value="HTML File" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -112,44 +70,59 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;true&quot;,
-    &quot;Gradle.Build MagicWebServer.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ServerTest.butterflyman.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ServerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ServerTest.root.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ServerTest.testGetRoot.executor&quot;: &quot;Debug&quot;,
-    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
-    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
-    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary&quot;: &quot;JUnit5&quot;,
-    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5&quot;: &quot;&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.preview.features.used&quot;: &quot;true&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/nguye/Magic/Education/Funix/Network/MagicWebServer/data&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/nguye/Magic/Education/Funix/Network/PackageTransmission/src/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Application.Main.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "Downloaded.Files.Path.Enabled": "true",
+    "Gradle.Build MagicWebServer.executor": "Run",
+    "JUnit.ConnectionTest.executor": "Run",
+    "JUnit.ConnectionTest.testPortNotServingWebServer.executor": "Run",
+    "JUnit.ConnectionTest.testPortServingWebServer.executor": "Run",
+    "JUnit.GETRequest.executor": "Run",
+    "JUnit.GETRequest.regexFail.executor": "Debug",
+    "JUnit.GETRequest.regexPass.executor": "Run",
+    "JUnit.GETRequest.root.executor": "Run",
+    "JUnit.GETRequest.routeParamaters.executor": "Run",
+    "JUnit.GETRequest.routeParamatersWithRegex.executor": "Run",
+    "JUnit.GETRequest.secret_txt.executor": "Run",
+    "JUnit.GETRequest.wildcardFail.executor": "Run",
+    "JUnit.GETRequest.wildcardFailNotFound.executor": "Run",
+    "JUnit.GETRequest.wildcardPass.executor": "Run",
+    "JUnit.GET_Request.root.executor": "Run",
+    "JUnit.ServerTest.aboutEmployeeManager.executor": "Run",
+    "JUnit.ServerTest.butterflyman.executor": "Run",
+    "JUnit.ServerTest.executor": "Run",
+    "JUnit.ServerTest.root.executor": "Run",
+    "JUnit.ServerTest.testGetRoot.executor": "Debug",
+    "Repository.Attach.Annotations": "false",
+    "Repository.Attach.JavaDocs": "false",
+    "Repository.Attach.Sources": "false",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
+    "git-widget-placeholder": "more-testcases",
+    "ignore.preview.features.used": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/nguye/Magic/Education/Funix/Network/MagicWebServer/data",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "onboarding.tips.debug.path": "C:/Users/nguye/Magic/Education/Funix/Network/PackageTransmission/src/Main.java",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\nguye\Magic\Education\Funix\Network\MagicWebServer\data" />
@@ -170,20 +143,8 @@
       <recent name="core.models.server" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="ALTERNATIVE_JRE_PATH" value="D:/Program Files/Java" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-      <envs>
-        <env name="verbose" value="true" />
-      </envs>
-      <option name="MAIN_CLASS_NAME" value="Main" />
-      <module name="MagicWebServer" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ServerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.GETRequest">
+    <configuration name="GETRequest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="MagicWebServer" />
       <extension name="coverage">
         <pattern>
@@ -192,13 +153,13 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="core.models.server" />
-      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.GETRequest" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ServerTest.butterflyman" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="GETRequest.root" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="MagicWebServer" />
       <extension name="coverage">
         <pattern>
@@ -207,41 +168,75 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="core.models.server" />
-      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
-      <option name="METHOD_NAME" value="butterflyman" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ServerTest.root" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="MagicWebServer" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="core.models.server.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="core.models.server" />
-      <option name="MAIN_CLASS_NAME" value="core.models.server.ServerTest" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.GETRequest" />
       <option name="METHOD_NAME" value="root" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="GETRequest.routeParamaters" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.GETRequest" />
+      <option name="METHOD_NAME" value="routeParamaters" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GETRequest.routeParamatersWithRegex" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.GETRequest" />
+      <option name="METHOD_NAME" value="routeParamatersWithRegex" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GETRequest.wildcardFailNotFound" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MagicWebServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="core.models.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="core.models.server" />
+      <option name="MAIN_CLASS_NAME" value="core.models.server.GETRequest" />
+      <option name="METHOD_NAME" value="wildcardFailNotFound" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <list>
-      <item itemvalue="Application.Main" />
-      <item itemvalue="JUnit.ServerTest.butterflyman" />
-      <item itemvalue="JUnit.ServerTest.root" />
-      <item itemvalue="JUnit.ServerTest" />
+      <item itemvalue="JUnit.GETRequest" />
+      <item itemvalue="JUnit.GETRequest.root" />
+      <item itemvalue="JUnit.GETRequest.routeParamaters" />
+      <item itemvalue="JUnit.GETRequest.routeParamatersWithRegex" />
+      <item itemvalue="JUnit.GETRequest.wildcardFailNotFound" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Main" />
-        <item itemvalue="JUnit.ServerTest" />
-        <item itemvalue="JUnit.ServerTest.butterflyman" />
-        <item itemvalue="JUnit.ServerTest.root" />
+        <item itemvalue="JUnit.GETRequest" />
+        <item itemvalue="JUnit.GETRequest.routeParamatersWithRegex" />
+        <item itemvalue="JUnit.GETRequest.root" />
+        <item itemvalue="JUnit.GETRequest.routeParamaters" />
+        <item itemvalue="JUnit.GETRequest.wildcardFailNotFound" />
       </list>
     </recent_temporary>
   </component>
@@ -432,6 +427,10 @@
       <workItem from="1719386588485" duration="5448000" />
       <workItem from="1719406556476" duration="1456000" />
       <workItem from="1719451891062" duration="2959000" />
+      <workItem from="1719472909455" duration="1236000" />
+      <workItem from="1719493532089" duration="788000" />
+      <workItem from="1719495316834" duration="632000" />
+      <workItem from="1719630651538" duration="7648000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Commit, check TodoList.md">
       <option name="closed" value="true" />
@@ -499,10 +498,52 @@
           </properties>
           <option name="timeStamp" value="68" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/core/models/routing_tries/Node.java</url>
+          <line>289</line>
+          <properties class="core.models.routing_tries.Node.TraverseNode" method="isChildTokenRegex">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="91" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/core/models/routing_tries/Node.java</url>
+          <line>109</line>
+          <properties class="core.models.routing_tries.Node" method="find">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="93" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/core/models/routing_tries/Node.java</url>
+          <line>198</line>
+          <properties class="core.models.routing_tries.Node.TraverseNode" method="findTraverse">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="94" />
+        </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/core/models/Response.java</url>
           <line>522</line>
           <option name="timeStamp" value="73" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/test/core/models/server/GETRequest.java</url>
+          <line>115</line>
+          <option name="timeStamp" value="74" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/test/core/models/server/GETRequest.java</url>
+          <line>103</line>
+          <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/test/core/models/server/GETRequest.java</url>
+          <line>145</line>
+          <option name="timeStamp" value="89" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

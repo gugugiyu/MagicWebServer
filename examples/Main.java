@@ -1,3 +1,5 @@
+package examples;
+
 import core.middleware.Cors;
 import core.middleware.Logger;
 import core.middleware.Middleware;
@@ -7,11 +9,10 @@ import core.path_handler.StaticFileHandler;
 public class Main {
     public static void main() {
         Server app = new Server(3000);
-        Cors.CorsOption corsOpt = Cors.CorsOption.getDefault();
 
         //This route path will match requests to the root route, /.
 
-        app.get("/", new Middleware[]{new Cors(app), new Logger(), new Logger(), new Logger()}, (req, res) -> {
+        app.get("/", new Middleware[]{new Cors(app), new Logger()}, (req, res) -> {
             res.send("root");
         });
 
@@ -25,7 +26,6 @@ public class Main {
 
         app.get("/about/employee/:developer", (req, res) -> {
             String devId = req.params.get("developer");
-
             res.send("Received employee id: " + devId);
         });
 

@@ -8,6 +8,7 @@ import core.utils.Formatter;
 import core.utils.RegexMatcher;
 
 import java.util.*;
+import java.util.regex.PatternSyntaxException;
 
 import static core.utils.Formatter.replaceEmptyWithRoot;
 
@@ -15,12 +16,12 @@ public class Node implements Cloneable{
     //Middleware to be called before the main handler
     private List<Middleware> middlewares;
     //Endpoint token for this branch
-    private String token;
+    private final String token;
     //The handlers that will be executed on matching this current route
     //This is acting as both the handler and the middleware (if passed multiple one, they will be called subsequently)
     private Handler nodeHandler;
     //The child
-    private List<Node> children;
+    private final List<Node> children;
 
     //The type of HTTP method
     private HttpMethod httpMethod;
@@ -200,18 +201,20 @@ public class Node implements Cloneable{
             if (tokens.length == 1 && getHttpMethod() == root.getHttpMethod())
                 return root;
 
-            boolean isFound = false;
+            boolean isFound = false, isMatched, isRegexMatched;
+            String compareStr;
             Node returnNode = root;
             int  iterator   = 1;
 
             //Offsetting by 1, so we don't have to traverse the root node again
 
             while (iterator < tokens.length) {
-                String compareStr = tokens[iterator];
-
-                boolean isMatched = false;
+                compareStr = tokens[iterator];
+                isMatched = false;
 
                 for (Node child : returnNode.children) {
+                    isRegexMatched = !isChildTokenRegex(compareStr, child.token).isEmpty();
+
                     if (!child.getHttpMethod().equals(getHttpMethod()))
                         continue;
 
@@ -219,17 +222,19 @@ public class Node implements Cloneable{
                         //Regexes also have asterisk, but they're interpreted differently
                         //So we'll have make sure which one is matching here
 
-                        isMatched = handleWildcard(iterator, tokens, child.token, compareStr)
-                                    || isChildTokenRegex(compareStr, child.token) != null;
+                        isMatched = handleWildcard(iterator, tokens, child.token, compareStr);
                     } else if (child.token.startsWith(":") && child.token.length() > 1) {
                         //Route parameter without name will be treated as literal string ":"
-                        //Route parameter handling
-                        //Starts at 1 to skip the colon (":")
-                        params.put(child.token.substring(1), compareStr);
-
+                        //Skip the colon ":"
                         isMatched = true;
+
+                        if (child.token.contains("("))
+                            isMatched = isRegexMatched;
+
+                        if (isMatched)
+                            params.put(child.token.substring(1, isRegexMatched ? child.token.indexOf("(") : child.token.length()), compareStr);
                     } else {
-                        if (compareStr.equals(child.token))
+                        if (isRegexMatched || compareStr.equals(child.token))
                             isMatched = true;
                     }
 
@@ -290,11 +295,14 @@ public class Node implements Cloneable{
             if (childToken.startsWith(":")) {
                 //Regex can also be used in route parameter, and is encapsulated between parentheses (())
                 //If the route was syntactically correct, the closing parenthesis should be at the last index
-                String regexPart = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
+                childToken = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
 
-                retGroup = regexMatcher.check(splitToken, regexPart);
-            } else {
+            }
+
+            try {
                 retGroup = regexMatcher.check(splitToken, childToken);
+            } catch (PatternSyntaxException e) {
+                return ""; //Invalid regex, or regex isn't provided
             }
 
             return retGroup;
