@@ -16,16 +16,11 @@ import core.utils.Formatter;
 import core.utils.StreamTransfer;
 import ssl.models.SSLServer;
 
-import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
-
-import static core.consts.Misc.CRLF;
 
 public class TransactionThread implements Runnable{
     //Making sure that each "next" callback from middlewares should only be called once
@@ -284,7 +279,7 @@ public class TransactionThread implements Runnable{
 
         traceBodyConverted = traceBody.toString();
 
-        res.setHeader("Date", Formatter.convertTime(new Date()));
+        res.setHeader("Date", Formatter.convertTime(null));
         res.setHeader("Content-Type", "message/http");
         res.setHeader("Content-Length", "" + traceBodyConverted.trim().length());
         res.setHeader("Connection", "close"); // TRACE is meant for debugging purpose, thus persisting this connection has no usage

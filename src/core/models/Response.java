@@ -13,7 +13,6 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -27,12 +26,12 @@ public class Response implements Closeable {
     //The associated request for this response, also can be used for checking client's compatability
     private final Request req;
 
-    private OutputStream oStream;
-    private Headers headers;
+    private final OutputStream oStream;
+    private final Headers headers;
     //This flag tells if the underlying connection (socket connection) should be closed after this request-response cycle
     private boolean isClosed;
 
-    private Encoder encoder;
+    private final Encoder encoder;
 
     private boolean isHeaderSent;
 
@@ -186,9 +185,6 @@ public class Response implements Closeable {
                 System.arraycopy(text, 0, content, 0, realLength);
             }
 
-            if (dateModified == null)
-                dateModified = new Date();
-
             if (!isHeaderSent){
                 prepareHeader(dateModified, content.length, mimeType);
                 sendHeaders();
@@ -206,7 +202,7 @@ public class Response implements Closeable {
         if (Config.VERBOSE){
             String semanticPath = processSemanticPath();
             System.out.printf("[+] %-30s %5d %-50s %3d %-35s %8s\n",
-                    Formatter.convertTime(new Date()),
+                    Formatter.convertTime(null),
                     Thread.currentThread().getId(),
                     semanticPath,
                     status,
@@ -344,7 +340,7 @@ public class Response implements Closeable {
         //Set the "dangerous" (not in the safe list) headers
         setHeader("Host", hostOrigin);
         setHeader("Server", "MagicWebServer/1.2");
-        setHeader("Date", Formatter.convertTime(new Date()));
+        setHeader("Date", Formatter.convertTime(null));
         setHeader("Connection", isClosed ? "close" : "keep-alive");
         setHeader("Accept-Ranges", "bytes");
 

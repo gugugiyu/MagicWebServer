@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
  */
 class GETRequest {
     @Test
-    void root() {
+    void testGET_root() {
         final String TEST_URL = "/";
         final String EXPECTED_CONTENT = "root";
 
@@ -38,7 +38,7 @@ class GETRequest {
     }
 
     @Test
-    void about() {
+    void testGET_about() {
         final String TEST_URL = "/about";
         final String EXPECTED_CONTENT = "about";
 
@@ -65,7 +65,7 @@ class GETRequest {
     }
 
     @Test
-    void secret_txt() {
+    void testGET_secret_txt() {
         final String TEST_URL = "/secret.txt";
         final String EXPECTED_CONTENT = "secret text with file extension";
 
@@ -92,7 +92,7 @@ class GETRequest {
     }
 
     @Test
-    void regexPass() {
+    void testGET_regexPass() {
         // Borrowed from expressJs routing case
         // https://expressjs.com/en/guide/routing.html
 
@@ -123,7 +123,7 @@ class GETRequest {
     }
 
     @Test
-    void regexFailNotFound() {
+    void testGET_regexFailNotFound() {
         // Borrowed from expressJs routing case
         // https://expressjs.com/en/guide/routing.html
 
@@ -154,7 +154,7 @@ class GETRequest {
     }
 
     @Test
-    void wildcardPass() {
+    void testGET_wildcardPass() {
         final String TEST_URL = "/wiiiii123iiild";
         final String WILDCARD = "wi*ld";
         final String EXPECTED_CONTENT = "Wildcard matched!";
@@ -182,7 +182,7 @@ class GETRequest {
     }
 
     @Test
-    void wildcardFailNotFound() {
+    void testGET_wildcardFailNotFound() {
         //Case sensitive, so the first "W" isn't the same as "w"
         final String TEST_URL = "/Wiiiiii123iiild";
         final String WILDCARD = "wi*ld";
@@ -211,7 +211,7 @@ class GETRequest {
     }
 
     @Test
-    void routeParamaters() {
+    void testGET_routeParamaters() {
         final int EMPLOYEE_ID = 12;
         final String TEST_URL = "/about/employee/" + EMPLOYEE_ID;
         final String EXPECTED_CONTENT = "Received employee id: " + EMPLOYEE_ID;
@@ -240,7 +240,7 @@ class GETRequest {
 
 
     @Test
-    void routeParamatersWithRegex() {
+    void testGET_routeParamatersWithRegex() {
         int EMPLOYEE_ID = 12;
         String TEST_URL = "/about/employee/" + EMPLOYEE_ID;
         String EXPECTED_CONTENT = "Received employee id: " + EMPLOYEE_ID;
@@ -280,7 +280,7 @@ class GETRequest {
     }
 
     @Test
-    void infinityLoop(){
+    void testGET_infinityLoop() {
         //Mock up an freezing inside the worker thread execution, thus force the server to time out the request
         final String TEST_URL = "/infiniteLoop";
 
