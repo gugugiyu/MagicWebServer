@@ -2,6 +2,7 @@ package core.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class RegexMatcher {
     /**
@@ -11,7 +12,7 @@ public class RegexMatcher {
      * @param regex The regex pattern to search with.
      * @return The first matched group, or null if no match is found.
      */
-    public String check(String input, String regex) {
+    public String check(String input, String regex) throws PatternSyntaxException {
 /*        System.out.println("Input: " + input);
         System.out.println("Regex: " + regex);*/
 

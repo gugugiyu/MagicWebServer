@@ -1,17 +1,27 @@
 package core.utils;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 
 public class Formatter {
     public static String getFormatedLength(int length) {
+        if (length < 0)
+            return null;
+
         //Returns the size of the file in converted form with unit
-        final String[] sizeTable = new String[]{" B", "KB", "MB", "GB", "TB", "PB"};
+        final String[] sizeTable = new String[]{"B", "KB", "MB", "GB", "TB", "PB"};
 
         int unitIndex = 0;
 
-        while (length >= 1024) {
-            length /= 1024;
+        // Using the SI (International System of Units) for megabyte when displaying size
+        // 1 megabyte = 1000 kilobytes
+        while (length >= 1000) {
+            length /= 1000;
 
             //Go to next unit
             unitIndex++;
@@ -21,10 +31,16 @@ public class Formatter {
     }
 
     public static String convertTime(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        return dateFormat.format(date);
+        if (date == null)
+            date = new Date();
+
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(
+                "EEE, dd MMM yyyy HH:mm:ss z", Locale.US
+        );
+
+        ZonedDateTime timezoneDependentNow = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+
+        return timezoneDependentNow.format(dateFormat);
     }
 
     public static String trimLeft(String s, char c) {
@@ -49,7 +65,7 @@ public class Formatter {
     public static String[] replaceEmptyWithRoot(String[] strings){
         ArrayList<String> list = new ArrayList<>(Arrays.asList(strings));
 
-        if (list.getFirst().equals(""))
+        if (list.get(0).isEmpty())
             list.set(0, "/");
 
         return list.toArray(new String[0]);

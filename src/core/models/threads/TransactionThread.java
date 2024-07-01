@@ -16,16 +16,11 @@ import core.utils.Formatter;
 import core.utils.StreamTransfer;
 import ssl.models.SSLServer;
 
-import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
-
-import static core.consts.Misc.CRLF;
 
 public class TransactionThread implements Runnable{
     //Making sure that each "next" callback from middlewares should only be called once
@@ -71,6 +66,9 @@ public class TransactionThread implements Runnable{
      * Should only be called when wish to interrupt the current thread after {@value Config#THREAD_TIMEOUT_DURATION} seconds (set by the @code THREAD_TIMEOUT_DURATION)
      */
     public void end(){
+        if (res == null)
+            return;
+
         res.sendError(HttpCode.INTERNAL_SERVER_ERROR);
 
 
@@ -91,7 +89,7 @@ public class TransactionThread implements Runnable{
 
     private void handleConnection(Socket sock) throws IOException {
         if (sock instanceof SSLSocket){
-            ((SSLSocket) sock).addHandshakeCompletedListener(_ -> isHandshakeCompleted = true);
+            ((SSLSocket) sock).addHandshakeCompletedListener((ignored) -> isHandshakeCompleted = true);
         }else{
             //HTTP doesn't have ssl handshake, simply skip this step
             isHandshakeCompleted = true;
@@ -164,17 +162,17 @@ public class TransactionThread implements Runnable{
 
     protected void handleDefaultMethod() throws IOException {
         switch (req.getMethod()){
-            case HttpMethod.GET:
+            case GET:
                 new StaticFileHandler(req.getPath().getPath()).handle(req, res);
                 break;
 
-            case HttpMethod.HEAD:
+            case HEAD:
                 req.setMethod(HttpMethod.GET);
                 res.setDiscardBody(true);
                 handleDefaultMethod(); //Recurse this function with GET method
                 break;
 
-            case HttpMethod.TRACE:
+            case TRACE:
                 handleTrace();
                 break;
 
@@ -196,7 +194,7 @@ public class TransactionThread implements Runnable{
         }
     }
 
-    private void handleException(Throwable t) throws IOException {
+    private void handleException(Throwable t) {
         if (req == null) {
             //Failed parsing request
             if (t instanceof IOException && t.getMessage().contains("line"))
@@ -251,7 +249,7 @@ public class TransactionThread implements Runnable{
         res.setHeader("Vary", "Upgrade-Insecure-Requests"); //For clients who don't support HTTPS
         res.redirect("https://" + location + path + query + frag , true);
 
-        return false;
+        return true;
     }
 
     private boolean transactionContinue(){
@@ -280,7 +278,7 @@ public class TransactionThread implements Runnable{
 
         traceBodyConverted = traceBody.toString();
 
-        res.setHeader("Date", Formatter.convertTime(new Date()));
+        res.setHeader("Date", Formatter.convertTime(null));
         res.setHeader("Content-Type", "message/http");
         res.setHeader("Content-Length", "" + traceBodyConverted.trim().length());
         res.setHeader("Connection", "close"); // TRACE is meant for debugging purpose, thus persisting this connection has no usage

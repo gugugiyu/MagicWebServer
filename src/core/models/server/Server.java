@@ -9,8 +9,9 @@ import core.path_handler.Handler;
 
 import javax.net.ServerSocketFactory;
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -55,6 +56,7 @@ public class Server implements Runnable{
 
         try {
             ServerSocket serverSocket;
+            Socket sock;
             TransactionThread transactionThread;
 
             try {
@@ -69,7 +71,7 @@ public class Server implements Runnable{
             TimeoutThreadPool threadPool = TimeoutThreadPool.getDefault();
 
             while (serverSocket != null && !serverSocket.isClosed()) {
-                final Socket sock = serverSocket.accept();
+                sock = serverSocket.accept();
                 //Set the timer and starts executing
                 sock.setSoTimeout(Config.THREAD_REQUEST_READ_TIMEOUT_DURATION);
                 //sock.setTcpNoDelay(true); // we buffer anyway, so improve latency
@@ -81,10 +83,20 @@ public class Server implements Runnable{
 
                 try{
                     status.get(Config.THREAD_TIMEOUT_DURATION, TimeUnit.SECONDS);
-                } catch (TimeoutException e){
-                    status.cancel(true); //Switches to the 500 Internal Server Error case
-                    transactionThread.end();
-                } catch (InterruptedException | ExecutionException ignored){ /* Probably won't ever happen */}
+                } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                    status.cancel(true);
+                    transactionThread.end(); //Serve back 500 Internal Server Error case
+
+                    if (e instanceof InterruptedException) {
+                        if (Config.VERBOSE)
+                            System.out.println("[+] FATAL: Server has been interrupted. Shutting down... ");
+
+                        if (serverSocket.isBound())
+                            serverSocket.close();
+
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
 
             //Handle unexpected reboot and shutdown

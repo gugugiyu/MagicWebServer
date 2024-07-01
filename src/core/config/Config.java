@@ -1,10 +1,9 @@
 package core.config;
 
+import core.utils.VersionFinder;
+
 import java.io.File;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
 
 public final class Config {
     private Config(){}
@@ -14,7 +13,7 @@ public final class Config {
     ////////////////////////////////////////
 
     //The root directory of the server (the MagicWebServer directory)
-    public static final String ROOT_DIR = "C:\\Users\\nguye\\Magic\\Education\\Funix\\Network\\MagicWebServer\\";
+    public static final String ROOT_DIR = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParentFile().getParent();
 
     //Maximum time allow for each thread to process the request and produce the response (s)
     public static final int THREAD_TIMEOUT_DURATION = 5;
@@ -38,7 +37,7 @@ public final class Config {
     // SSL/HTTPS config                   //
     ////////////////////////////////////////
 
-    //Path to the exported key (PKCS12 file) or keystore (.jks file)
+    //The ABSOLUTE path to the exported key (PKCS12 file) or keystore (.jks file)
     public static final String KEY_PATH = "";
 
     //The password of the given key
@@ -54,7 +53,7 @@ public final class Config {
     // Serving config                     //
     ////////////////////////////////////////
 
-    public static final String STATIC_DIR = ROOT_DIR + "data";
+    public static final String STATIC_DIR = ROOT_DIR + "\\data";
 
     //Used for "Keep-Alive" header, "max" field
     public static final int MAX_SERVE_PER_CONNECTION = 100;
@@ -84,4 +83,5 @@ public final class Config {
     //Toggle dump error to err stream behavior
     public static final boolean SHOW_ERROR = true;
 
+    public static final int JAVA_VERSION = VersionFinder.getJavaMajorVersion();
 }
