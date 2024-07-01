@@ -65,7 +65,7 @@ public class Formatter {
     public static String[] replaceEmptyWithRoot(String[] strings){
         ArrayList<String> list = new ArrayList<>(Arrays.asList(strings));
 
-        if (list.get(0).equals(""))
+        if (list.get(0).isEmpty())
             list.set(0, "/");
 
         return list.toArray(new String[0]);

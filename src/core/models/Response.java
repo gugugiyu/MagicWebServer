@@ -97,8 +97,8 @@ public class Response implements Closeable {
      * <li>When the MIME type of the response type isn't already compressed (check out the list from the {@code COMPRESSED_DATE_TYPE } constant)</li>
      * </ul>
      *
-     * @return
-     * @throws IOException
+     * @return the encoder to be used from the {@link EncoderFactory}
+     * @throws IOException exception when performing compression
      */
     private Encoder shouldEncode() throws IOException {
         if (req == null || req.getHeaders().find("Accept-Encoding").isEmpty())
@@ -400,48 +400,48 @@ public class Response implements Closeable {
         sendFile(new FileAttributeRetriever(new File(realPath)), path);
     }
 
-    public void sendFile(FileAttributeRetriever baseDir, String rawPath) throws IOException {
-        if (baseDir.file().isDirectory()) {
+    public void sendFile(FileAttributeRetriever dir, String rawPath) throws IOException {
+        if (dir.file().isDirectory()) {
             //Redirect URL for directories requests that don't start with "/"
             if (!rawPath.endsWith("/")) {
                 redirect(rawPath + "/", true);
             } else {
                 //If the path points to the directory, 200 OK
-                serveDirectory(baseDir, rawPath);
+                serveDirectory(dir, rawPath);
             }
-        } else if (!baseDir.file().exists()
-                || baseDir.file().isHidden()
-                || baseDir.file().getName().startsWith(".")) {
+        } else if (!dir.file().exists()
+                || dir.file().isHidden()
+                || dir.file().getName().startsWith(".")) {
 
             //Not Found
             sendError(HttpCode.NOT_FOUND);
-        } else if (!baseDir.file().canRead()) {
+        } else if (!dir.file().canRead()) {
 
             //Can't read the file
             //403 Forbidden
             sendError(HttpCode.FORBIDDEN);
         } else {
             //200 OK
-            readAndSendFile(baseDir);
+            readAndSendFile(dir);
         }
     }
 
     /**
      * Se
      *
-     * @param baseDir
+     * @param dir The base directory of the file
      * @throws IOException
      */
-    private void readAndSendFile(FileAttributeRetriever baseDir) throws IOException {
-        FileInputStream iStream = new FileInputStream(baseDir.file());
-        long fileLength = baseDir.file().length();
+    private void readAndSendFile(FileAttributeRetriever dir) throws IOException {
+        FileInputStream iStream = new FileInputStream(dir.file());
+        long fileLength = dir.file().length();
         byte[] arr;
         int[] byteRead;
 
         //TODO chunk-based response
-       /* if ( baseDir.file().length() > Config.BODY_BUFFER_SIZE  && oStream instanceof ChunkedOutputStream){
+       /* if ( dir.file().length() > Config.BODY_BUFFER_SIZE  && oStream instanceof ChunkedOutputStream){
             //Sending in chunks instead
-            String mimeType = baseDir.getMimeType();
+            String mimeType = dir.getMimeType();
 
             setHeader("Transfer-Encoding", "chunked");
 
@@ -461,7 +461,7 @@ public class Response implements Closeable {
             byteRead = iStream.read(arr);
 
             while (byteRead != -1){
-                send(arr, byteRead, new Date(baseDir.file().lastModified()), baseDir.getMimeType(), HttpCode.OK);
+                send(arr, byteRead, new Date(dir.file().lastModified()), dir.getMimeType(), HttpCode.OK);
 
                 int avaiByte = iStream.available();
 
@@ -500,7 +500,7 @@ public class Response implements Closeable {
             setHeader("Content-Range","bytes " + byteRead[0] + "-" + endByte + "/" + fileLength);
         }
 
-        send(arr, byteRead[1], new Date(baseDir.file().lastModified()) , baseDir.getMimeType(), resCode);
+        send(arr, byteRead[1], new Date(dir.file().lastModified()), dir.getMimeType(), resCode);
     }
 
     /**
@@ -538,7 +538,7 @@ public class Response implements Closeable {
         return new int[]{offset, iStream.read(arr, 0, len)};
     }
 
-    private void serveDirectory(FileAttributeRetriever baseDir, String rawPath) {
+    private void serveDirectory(FileAttributeRetriever dir, String rawPath) {
         //Mimic behavior of Apache Web server
 
         StringBuilder template = new StringBuilder("<!DOCTYPE html>\n" +
@@ -551,7 +551,7 @@ public class Response implements Closeable {
                 "<ul>");
 
         //Retrieve file name from a directory
-        File[] files = baseDir.file().listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
+        File[] files = dir.file().listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
 
         if (files == null) {
             template.append("<h3> There's no file in this directory </h3>");

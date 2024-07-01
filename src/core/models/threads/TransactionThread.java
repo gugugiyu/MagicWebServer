@@ -194,7 +194,7 @@ public class TransactionThread implements Runnable{
         }
     }
 
-    private void handleException(Throwable t) throws IOException {
+    private void handleException(Throwable t) {
         if (req == null) {
             //Failed parsing request
             if (t instanceof IOException && t.getMessage().contains("line"))
@@ -219,7 +219,6 @@ public class TransactionThread implements Runnable{
                 res.sendError(HttpCode.BAD_REQUEST, "Invalid request: " + t.getMessage());
             }
         } else {
-            t.printStackTrace();
             res.sendError(HttpCode.INTERNAL_SERVER_ERROR, "Error processing request: " + t.getMessage());
         }
     }
@@ -250,7 +249,7 @@ public class TransactionThread implements Runnable{
         res.setHeader("Vary", "Upgrade-Insecure-Requests"); //For clients who don't support HTTPS
         res.redirect("https://" + location + path + query + frag , true);
 
-        return false;
+        return true;
     }
 
     private boolean transactionContinue(){
