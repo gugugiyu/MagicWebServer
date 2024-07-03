@@ -6,7 +6,6 @@ import core.consts.Misc;
 import core.models.header.Header;
 import core.models.header.Headers;
 
-import javax.net.ssl.SSLSocket;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

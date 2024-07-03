@@ -72,13 +72,10 @@ public class Server implements Runnable{
 
             while (serverSocket != null && !serverSocket.isClosed()) {
                 sock = serverSocket.accept();
-                //Set the timer and starts executing
                 sock.setSoTimeout(Config.THREAD_REQUEST_READ_TIMEOUT_DURATION);
-                //sock.setTcpNoDelay(true); // we buffer anyway, so improve latency
                 sock.setKeepAlive(true);
 
                 transactionThread = new TransactionThread(sock, tries, this);
-                //TODO use submit for timeout handler
                 Future<?> status = threadPool.submit(transactionThread);
 
                 try{
@@ -99,7 +96,6 @@ public class Server implements Runnable{
                 }
             }
 
-            //Handle unexpected reboot and shutdown
             Runtime.getRuntime().addShutdownHook(new ShutdownThread());
         } catch (IOException e) {
             if (Config.SHOW_ERROR) System.err.println("[-] Exception occur. Using port: " + port);

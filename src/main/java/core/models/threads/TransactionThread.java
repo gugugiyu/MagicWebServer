@@ -115,7 +115,7 @@ public class TransactionThread implements Runnable{
 
                 res = new Response(req, counter, isHandshakeCompleted);
 
-                //Check for http version compatibility
+                //Only support from version 1.1 downwards
                 if (!compatibleHttpVersion()) break;
 
                 //Check for insecure upgrade request
@@ -224,7 +224,7 @@ public class TransactionThread implements Runnable{
     }
 
     private boolean compatibleHttpVersion(){
-        if (!req.getVersion().equals("1.1")){
+        if (!req.getVersion().startsWith("1")) {
             res.setHeader("Connection", "close");
             res.sendError(HttpCode.HTTP_VERSION_NOT_SUPPORTED);
             return false;

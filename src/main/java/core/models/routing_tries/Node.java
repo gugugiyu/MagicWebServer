@@ -16,7 +16,7 @@ public class Node implements Cloneable{
     //Middleware to be called before the main handler
     private List<Middleware> middlewares;
     //Endpoint token for this branch
-    private final String token;
+    private String token;
     //The handlers that will be executed on matching this current route
     //This is acting as both the handler and the middleware (if passed multiple one, they will be called subsequently)
     private Handler nodeHandler;
@@ -56,17 +56,13 @@ public class Node implements Cloneable{
 
 
     public void register(HttpMethod method, String endpoint, ArrayList<Middleware> middlewares, Handler nodeHandler) {
-        //In case the endpoint contains the current URL token
-        //For example, the endpoint: "/dog" will contain the root "/"
-
-        //We'll probably needs to trim off the request header here as well
         endpoint = trimRequestParam(endpoint);
 
-        //Treat "/" as a token as well
         String[] tokens = endpoint.equals("/") ? new String[]{"/"} : replaceEmptyWithRoot(endpoint.split("/", 0));
 
         TraverseNode tNode = new TraverseNode(method, endpoint, nodeHandler);
         Node node = tNode.registerTraverse(this, tokens);
+        Node tempNode = null;
 
         if (node.getHttpMethod() == method && tNode.depthLayer == tokens.length) {
             if (middlewares != null)
@@ -93,18 +89,83 @@ public class Node implements Cloneable{
                     (i == tokens.length - 1) ? nodeHandler : null //Unless it's the final token, we won't add any handler for the sub-token
             );
 
+            //The route parameter with regex will override the one without
+
             if (tokens.length < 2 && tokens[i].startsWith("*")) {
-                /* Match all case should be evaluated last */
+                /* Absolute wildcard "*" should be evaluated last */
                 node.children.addLast(newNode);
                 node = node.children.getLast();
             } else {
-                node.children.addFirst(newNode);
-                node = node.children.getFirst();
+                if (tokens[i].startsWith(":"))
+                    tempNode = overrideRouteParam(node, tokens[i]);
+
+                if (tempNode == null) {
+                    node.children.addFirst(newNode);
+                    node = node.children.getFirst();
+                } else {
+                    if (tempNode.token == null) {
+                        //Shouldn't override
+                        break;
+                    }
+
+                    tempNode.middlewares = middlewares;
+                    tempNode.nodeHandler = nodeHandler;
+                    tempNode.token = tokens[i];
+                }
             }
         }
 
         if (middlewares != null)
             node.setMiddleware(middlewares);
+    }
+
+    /**
+     * Override the route parameters at any token level. The {@code checkRoute} will only override the current route param in any of these conditions:
+     * <ul>
+     *     <li>{@code checkRoute} has different name than the current route param</li>
+     *     <li>{@code checkRoute} has same name, but different</li>
+     * </ul>
+     *
+     * @param node       The current node in which the next token to be inserted
+     * @param checkRoute The route to be checked (should be a route parameter, regex is optional)
+     * @return null if no route param matched, {@link Node} instance with token of {@code null} when override failed, and the target node to be overridden if success
+     */
+    private Node overrideRouteParam(Node node, String checkRoute) {
+        int regexIdx;
+        boolean sameNameButDifferentRegex = checkRoute.contains("(");
+        String compareStr;
+
+        for (Node child : node.children) {
+            if (!child.token.startsWith(":")) {
+                continue;
+            }
+
+            if (child.token.length() < 2) {
+                //Treated as path literal
+                continue;
+            }
+
+            regexIdx = child.token.indexOf("(");
+
+            compareStr = (regexIdx != -1)
+                    ? child.token.substring(0, regexIdx)
+                    : child.token;
+
+            if (sameNameButDifferentRegex)
+                sameNameButDifferentRegex = compareStr
+                        .substring(regexIdx + 1)
+                        .equals(checkRoute.substring(checkRoute.indexOf("(") + 1));
+
+            if (compareStr.equals(checkRoute) && !sameNameButDifferentRegex)
+                return new Node(HttpMethod.GET, null, null);
+
+            if (!compareStr.equals(checkRoute) || sameNameButDifferentRegex) {
+                return child;
+            }
+        }
+
+        //There's no route param existed yet, just assign it as normal
+        return null;
     }
 
     public HandlerWithParam find(HttpMethod method, String endpoint) {

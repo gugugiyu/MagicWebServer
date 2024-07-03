@@ -1,6 +1,5 @@
 package examples;
 
-import core.config.Config;
 import core.middleware.Cors;
 import core.middleware.Logger;
 import core.middleware.Middleware;
@@ -10,8 +9,6 @@ import core.path_handler.StaticFileHandler;
 public class Main {
     public static void main(String[] args) {
         Server app = new Server(3000);
-
-        System.out.println(Config.ROOT_DIR);
 
         app.get("/", new Middleware[]{new Cors(app), new Logger()}, (req, res) -> {
             res.send("root");
@@ -25,15 +22,10 @@ public class Main {
             res.send("about");
         });
 
-        app.get("/about/employee/:developer", (req, res) -> {
-            String devId = req.params.get("developer");
-            res.send("Received employee id: " + devId);
-        });
 
-        app.get("/about/employee/:manager", (req, res) -> {
-            String managerId = req.params.get("manager");
-
-            res.send("Received manager id: " + managerId);
+        app.get("/about/employee/:manager(^\\d+$)", (req, res) -> {
+            String devId = req.params.get("manager");
+            res.send("Received manager id: " + devId);
         });
 
         app.get("/about/employee/:manager/it_manager/:name", (req, res) -> {

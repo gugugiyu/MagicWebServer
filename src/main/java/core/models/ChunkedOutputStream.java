@@ -3,7 +3,6 @@ package core.models;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.spec.RSAOtherPrimeInfo;
 
 import static core.consts.Misc.CRLF;
 
@@ -17,7 +16,6 @@ public class ChunkedOutputStream extends FilterOutputStream {
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        System.out.println("full called!");
         //From https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding
 
         // At the beginning of each chunk you need to add the length of the current chunk in hexadecimal format.

@@ -2,19 +2,12 @@ package ssl.validator;
 
 import core.config.Config;
 
-import java.io.*;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
 
 public class SSLValidator {
-    private static String[] defaultPath = new String[4];
+    private static final String[] defaultPath = new String[4];
 
     static{
         defaultPath[0] = Config.ROOT_DIR;

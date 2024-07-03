@@ -2,7 +2,6 @@ package core.middleware;
 
 import core.models.Request;
 import core.models.Response;
-import core.models.server.Server;
 
 import java.io.IOException;
 import java.io.OutputStream;

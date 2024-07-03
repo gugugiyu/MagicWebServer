@@ -6,7 +6,6 @@ import core.models.Request;
 import core.models.Response;
 import core.models.header.Headers;
 import core.models.server.Server;
-import core.utils.Formatter;
 
 import java.net.URI;
 import java.util.ArrayList;
