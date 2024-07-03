@@ -17,12 +17,13 @@ import core.utils.StreamTransfer;
 import ssl.models.SSLServer;
 
 import javax.net.ssl.SSLSocket;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.util.*;
 
-public class TransactionThread implements Runnable{
+public class TransactionThread implements Runnable, Closeable {
     //Making sure that each "next" callback from middlewares should only be called once
     private static boolean isNextMiddlewareCalled = false;
 
@@ -44,6 +45,8 @@ public class TransactionThread implements Runnable{
 
     @Override
     public void run() {
+        long startTime = System.currentTimeMillis();
+
         try {
             try {
                 handleConnection(sock);
@@ -60,17 +63,19 @@ public class TransactionThread implements Runnable{
                 }
             }
         } catch (IOException ignored){}
+
+        System.out.println("Execute for: " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     /**
      * Should only be called when wish to interrupt the current thread after {@value Config#THREAD_TIMEOUT_DURATION} seconds (set by the @code THREAD_TIMEOUT_DURATION)
      */
-    public void end(){
+    @Override
+    public void close() {
         if (res == null)
             return;
 
         res.sendError(HttpCode.INTERNAL_SERVER_ERROR);
-
 
         //Handle just like the run method
         try{

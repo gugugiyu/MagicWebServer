@@ -14,12 +14,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-public class Server implements Runnable{
+public class Server implements Runnable {
     private final URITries tries;
 
     private int port;
@@ -73,27 +69,10 @@ public class Server implements Runnable{
             while (serverSocket != null && !serverSocket.isClosed()) {
                 sock = serverSocket.accept();
                 sock.setSoTimeout(Config.THREAD_REQUEST_READ_TIMEOUT_DURATION);
-                sock.setKeepAlive(true);
+                sock.setTcpNoDelay(true);
 
                 transactionThread = new TransactionThread(sock, tries, this);
-                Future<?> status = threadPool.submit(transactionThread);
-
-                try{
-                    status.get(Config.THREAD_TIMEOUT_DURATION, TimeUnit.SECONDS);
-                } catch (InterruptedException | TimeoutException | ExecutionException e) {
-                    status.cancel(true);
-                    transactionThread.end(); //Serve back 500 Internal Server Error case
-
-                    if (e instanceof InterruptedException) {
-                        if (Config.VERBOSE)
-                            System.out.println("[+] FATAL: Server has been interrupted. Shutting down... ");
-
-                        if (serverSocket.isBound())
-                            serverSocket.close();
-
-                        Thread.currentThread().interrupt();
-                    }
-                }
+                threadPool.submitWithTimer(transactionThread, serverSocket);
             }
 
             Runtime.getRuntime().addShutdownHook(new ShutdownThread());
@@ -166,6 +145,7 @@ public class Server implements Runnable{
 
         //Config server for being to being able to rebind after previous timeout state
         serverSocket.setReuseAddress(true);
+        serverSocket.setSoTimeout(0);
         serverSocket.bind(new InetSocketAddress(hostIP.getHostName(), port));
 
         return serverSocket;
