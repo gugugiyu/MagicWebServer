@@ -1,7 +1,7 @@
 package core.models.server;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -11,7 +11,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 
 public class StressTest {
 
@@ -44,7 +46,7 @@ public class StressTest {
                     connection.setRequestMethod("GET");
                     int responseCode = connection.getResponseCode();
 
-                    assertEquals(200, responseCode, "Response code should be 200");
+                    assertEquals("Response code should be 200", 200, responseCode);
 
                     BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     String inputLine;
@@ -54,7 +56,7 @@ public class StressTest {
                     }
                     in.close();
 
-                    assertEquals(EXPECTED_CONTENT, content.toString(), "Content should be 'root'");
+                    assertEquals("Content should be 'root'", EXPECTED_CONTENT, content.toString());
 
                 } catch (Exception e) {
                     fail("Exception raised: " + e.getMessage());

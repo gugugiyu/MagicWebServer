@@ -1,11 +1,11 @@
 package core.utils;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-class FormatterTest {
+public class FormatterTest {
 
     @Test
-    void getFormatedLength() {
+    public void getFormatedLength() {
         GetFormattedLengthTest allTest = new GetFormattedLengthTest();
 
         allTest.test_maxLength();
@@ -18,7 +18,7 @@ class FormatterTest {
     }
 
     @Test
-    void convertTime() {
+    public void convertTime() {
         ConvertTimeTest allTest = new ConvertTimeTest();
 
         allTest.test_nullString();
@@ -27,7 +27,7 @@ class FormatterTest {
     }
 
     @Test
-    void trimLeft() {
+    public void trimLeft() {
         TrimLeftTest allTest = new TrimLeftTest();
 
         allTest.testTrimLeft_EmptyString();
@@ -48,7 +48,7 @@ class FormatterTest {
     }
 
     @Test
-    void trimRight() {
+    public void trimRight() {
         TrimRightTest allTest = new TrimRightTest();
 
         allTest.testTrimRight_EmptyString();

@@ -1,28 +1,29 @@
 package core.utils;
 
-import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class GetFormattedLengthTest {
     @Test
-    void test_validLength() {
+    public void test_validLength() {
         assertEquals("500 KB", getFormattedLength(500000));
     }
 
     @Test
-    void test_negativeLength() {
+    public void test_negativeLength() {
         assertNull(getFormattedLength(Integer.MIN_VALUE));
     }
 
     @Test
-    void test_0Length() {
+    public void test_0Length() {
         assertEquals("0 B", getFormattedLength(0));
     }
 
     @Test
-    void test_maxLength() {
+    public void test_maxLength() {
         // 2147483647 bytes is roughly 2 GB
 
         assertEquals("2 GB", getFormattedLength(Integer.MAX_VALUE));

@@ -1,17 +1,17 @@
 package core.utils;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.TimeZone;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class ConvertTimeTest {
     @Test
-    void test_nullString() {
+    public void test_nullString() {
         Date testDate = null;
 
         //NULL value should be resolved to get current time
@@ -19,7 +19,7 @@ public class ConvertTimeTest {
     }
 
     @Test
-    void test_validTime() {
+    public void test_validTime() {
         Date testTime = new Date(1000); //1 seconds after the epoch
 
         ZonedDateTime now = ZonedDateTime.now();
