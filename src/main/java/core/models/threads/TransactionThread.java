@@ -45,8 +45,6 @@ public class TransactionThread implements Runnable, Closeable {
 
     @Override
     public void run() {
-        long startTime = System.currentTimeMillis();
-
         try {
             try {
                 handleConnection(sock);
@@ -63,8 +61,6 @@ public class TransactionThread implements Runnable, Closeable {
                 }
             }
         } catch (IOException ignored){}
-
-        System.out.println("Execute for: " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     /**
