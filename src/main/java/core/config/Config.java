@@ -15,8 +15,8 @@ public final class Config {
     //The root directory of the server (the MagicWebServer directory)
     public static final String ROOT_DIR = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParentFile().getParent();
 
-    //Maximum time allow for each thread to process the request and produce the response (s)
-    public static final int THREAD_TIMEOUT_DURATION = 5;
+    //Maximum time allow for each thread to process the request and produce the response (ms)
+    public static final int THREAD_TIMEOUT_DURATION = 5000;
 
     //The min number of active thread per server (int)
     public static final int CORE_POOL_SIZE = 10;
