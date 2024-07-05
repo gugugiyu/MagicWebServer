@@ -1,0 +1,10 @@
+Here's the pem file config:
+
+- password: 123456
+- country name: VN
+- state: Sai Gon
+- Locality Name: Ho Chi Minh City
+- Organization Name: Magic
+- Organization Unit Name: MagicServer
+- Common Name: Magic
+- Email: nguyen1222224@gmail.com
