@@ -29,7 +29,7 @@ public class ConvertTimeTest {
         int offsetHours = offset.getTotalSeconds() / 3600;
 
         assertEquals(
-                "Thu, 01 Jan 1970 0" + (offsetHours + 1) + ":00:01 " + TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT),
+                "Thu, 01 Jan 1970 0" + (offsetHours) + ":00:01 " + TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT),
                 convertTime(testTime));
     }
 
