@@ -1,6 +1,7 @@
 package core.models.server;
 
 
+import com.github.magic.core.models.server.Server;
 import org.junit.Test;
 
 import java.io.BufferedReader;
