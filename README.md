@@ -1,3 +1,6 @@
+![current build status](https://github.com/gugugiyu/MagicWebServer/actions/workflows/maven-push.yml/badge.svg)
+
+
 # MagicWebServer
 A hobby web server written in Java
 
