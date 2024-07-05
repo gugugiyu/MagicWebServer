@@ -163,17 +163,17 @@ public class TransactionThread implements Runnable, Closeable {
 
     protected void handleDefaultMethod() throws IOException {
         switch (req.getMethod()){
-            case HttpMethod.GET:
+            case GET:
                 new StaticFileHandler(req.getPath().getPath()).handle(req, res);
                 break;
 
-            case HttpMethod.HEAD:
+            case HEAD:
                 req.setMethod(HttpMethod.GET);
                 res.setDiscardBody(true);
                 handleDefaultMethod(); //Recurse this function with GET method
                 break;
 
-            case HttpMethod.TRACE:
+            case TRACE:
                 handleTrace();
                 break;
 
