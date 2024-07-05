@@ -1,10 +1,11 @@
 package core.models.server;
 
-import core.config.Config;
-import core.consts.HttpCode;
-import core.middleware.Cors;
-import core.middleware.Logger;
-import core.middleware.Middleware;
+import com.github.magic.core.config.Config;
+import com.github.magic.core.consts.HttpCode;
+import com.github.magic.core.middleware.Cors;
+import com.github.magic.core.middleware.Logger;
+import com.github.magic.core.middleware.Middleware;
+import com.github.magic.core.models.server.Server;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;

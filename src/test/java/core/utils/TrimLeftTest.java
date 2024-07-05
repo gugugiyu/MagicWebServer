@@ -1,5 +1,6 @@
 package core.utils;
 
+import com.github.magic.core.utils.Formatter;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
