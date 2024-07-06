@@ -7,7 +7,7 @@ import com.github.magic.core.models.server.Server;
 import com.github.magic.core.path_handler.StaticFileHandler;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) {        
         Server app = new Server(3000);
 
         app.get("/", new Middleware[]{new Cors(app), new Logger()}, (req, res) -> {
@@ -56,7 +56,6 @@ public class Main {
         app.get("/infiniteLoop", new Middleware[]{new Logger("This shouldn't be returning!")},  (req, res) -> {
             while(true){}
         });
-
         app.listen();
     }
 }

@@ -52,8 +52,9 @@ public class Request {
      * @param socket the connection socket
      * @throws IllegalArgumentException when the request failed to parse the receive data
      * @throws SocketException when the request parse being invoked again with the do-while loop after finish the first request, response cycle
+     * @throws InterruptedException 
      */
-    public Request(Socket socket) throws IOException, SocketException {
+    public Request(Socket socket) throws IOException, SocketException, IllegalArgumentException {
         InputStream data = socket.getInputStream();
 
         query = new HashMap<>();
@@ -61,12 +62,9 @@ public class Request {
 
         this.requestSocket = socket;
 
-        extractData(data);
-    }
 
-    private void extractData(InputStream data) throws IOException, IllegalArgumentException {
         extractRequestLine(data);
-
+        
         if (isMismatched && Config.SHOW_ERROR) System.err.printf("[-] %s Error: Protocol mismatched\n", requestSocket.getInetAddress());
 
         if (!isMismatched){
@@ -74,7 +72,6 @@ public class Request {
             extractBody(data);
         }
     }
-
 
     private void extractRequestLine(InputStream data) throws IOException, IllegalArgumentException {
         //Parse the method, version and path from the request line;

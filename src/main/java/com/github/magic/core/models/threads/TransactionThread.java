@@ -71,8 +71,6 @@ public class TransactionThread implements Runnable, Closeable {
         if (res == null)
             return;
 
-        res.sendError(HttpCode.INTERNAL_SERVER_ERROR);
-
         //Handle just like the run method
         try{
             try {
@@ -158,6 +156,7 @@ public class TransactionThread implements Runnable, Closeable {
             }
 
             counter--;
+
         } while (transactionContinue());
     }
 
@@ -203,7 +202,6 @@ public class TransactionThread implements Runnable, Closeable {
 
             //Socket timeout, current thread interrupted
             if (t instanceof InterruptedIOException){
-                res.sendError(HttpCode.REQUEST_TIMEOUT);
                 return;
             }
 
@@ -257,8 +255,8 @@ public class TransactionThread implements Runnable, Closeable {
         String reqConnectionStatus = req.getHeaders().find("Connection");
         String resConnectionStatus = res.getHeaders().find("Connection");
 
-        //No "Connection" header will be deemed as non-persistent connection
-        return  !reqConnectionStatus.isEmpty()
+        //When no "Connection" header is found within the request, default to consistent connection behavior
+        return  reqConnectionStatus.isEmpty()
                 && !"close".equalsIgnoreCase(reqConnectionStatus)
                 && resConnectionStatus.isEmpty()
                 && !"close".equalsIgnoreCase(res.getHeaders().find("Connection"))

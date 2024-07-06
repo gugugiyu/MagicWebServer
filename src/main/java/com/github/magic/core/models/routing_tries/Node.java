@@ -94,22 +94,17 @@ public class Node implements Cloneable{
                 node.children.addLast(newNode);
                 node = node.children.getLast();
             } else {
-                if (tokens[i].startsWith(":"))
+                if (tokens[i].startsWith(":")){
                     tempNode = overrideRouteParam(node, tokens[i]);
-
-                if (tempNode == null) {
-                    node.children.addFirst(newNode);
-                    node = node.children.getFirst();
-                } else {
-                    if (tempNode.token == null) {
-                        //Shouldn't override
-                        break;
+                    
+                    if (tempNode != null){
+                        node = tempNode;
+                        continue;
                     }
-
-                    tempNode.middlewares = middlewares;
-                    tempNode.nodeHandler = nodeHandler;
-                    tempNode.token = tokens[i];
                 }
+
+                node.children.addFirst(newNode);
+                node = node.children.getFirst();
             }
         }
 
@@ -118,48 +113,48 @@ public class Node implements Cloneable{
     }
 
     /**
-     * Override the route parameters at any token level. The {@code checkRoute} will only override the current route param in any of these conditions:
+     * Override the route parameters at any token level. The {@code afterRoute} will only override the current route param in any of these conditions:
      * <ul>
-     *     <li>{@code checkRoute} has different name than the current route param</li>
-     *     <li>{@code checkRoute} has same name, but different</li>
+     *     <li>{@code afterRoute} has different name than the current route param</li>
+     *     <li>{@code afterRoute} has same name, but different regex</li>
      * </ul>
      *
      * @param node       The current node in which the next token to be inserted
-     * @param checkRoute The route to be checked (should be a route parameter, regex is optional)
-     * @return null if no route param matched, {@link Node} instance with token of {@code null} when override failed, and the target node to be overridden if success
+     * @param afterRoute The route to be checked (should be a route parameter, regex is optional)
+     * @return null if no route param matched, or the target node to be overridden if success
      */
-    private Node overrideRouteParam(Node node, String checkRoute) {
-        int regexIdx;
-        boolean sameNameButDifferentRegex = checkRoute.contains("(");
-        String compareStr;
+    private Node overrideRouteParam(Node node, String afterRoute) {
+        int beforeRegexIdx, afterRegexIdx = afterRoute.indexOf("(");
+        String beforeRoute = ""; 
+        String beforeRouteName = beforeRoute, afterRouteName = afterRoute;
+        String beforeRouteRegexPart = "", afterRouteRegexPart = "";
 
         for (Node child : node.children) {
-            if (!child.token.startsWith(":")) {
-                continue;
+            beforeRoute = child.token;
+
+            //Ignore routes that aren't route parameters or string literal ":"
+            if (!beforeRoute.startsWith(":") || beforeRoute.length() < 2) continue;
+            
+            beforeRegexIdx = beforeRoute.indexOf("(");
+
+            //Get name for both
+            if (beforeRegexIdx != -1){
+                beforeRouteName = beforeRoute.substring(0, beforeRegexIdx);
+                beforeRouteRegexPart = beforeRoute.substring(beforeRegexIdx);
             }
 
-            if (child.token.length() < 2) {
-                //Treated as path literal
-                continue;
+            if (afterRegexIdx != -1){
+                afterRouteName = afterRoute.substring(0, afterRegexIdx);
+                afterRouteRegexPart = afterRoute.substring(afterRegexIdx + 1);
             }
 
-            regexIdx = child.token.indexOf("(");
+            if (!beforeRouteName.equals(afterRouteName) 
+                || (!afterRouteRegexPart.equals(beforeRouteRegexPart))) 
+                
+                if (!afterRouteRegexPart.isEmpty())
+                    child.token = afterRoute; 
 
-            compareStr = (regexIdx != -1)
-                    ? child.token.substring(0, regexIdx)
-                    : child.token;
-
-            if (sameNameButDifferentRegex)
-                sameNameButDifferentRegex = compareStr
-                        .substring(regexIdx + 1)
-                        .equals(checkRoute.substring(checkRoute.indexOf("(") + 1));
-
-            if (compareStr.equals(checkRoute) && !sameNameButDifferentRegex)
-                return new Node(HttpMethod.GET, null, null);
-
-            if (!compareStr.equals(checkRoute) || sameNameButDifferentRegex) {
                 return child;
-            }
         }
 
         //There's no route param existed yet, just assign it as normal

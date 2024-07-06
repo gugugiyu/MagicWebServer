@@ -85,7 +85,7 @@ public class Response implements Closeable {
 
     public boolean isConnectionClosed() {
         String connectionHeader = req.getHeaders().find("Connection");
-        return connectionHeader.isEmpty() || connectionHeader.equalsIgnoreCase("close");
+        return connectionHeader.equalsIgnoreCase("close");
     }
 
     /**
@@ -434,6 +434,7 @@ public class Response implements Closeable {
     private void readAndSendFile(FileAttributeRetriever dir) throws IOException {
         FileInputStream iStream = new FileInputStream(dir.file());
         long fileLength = dir.file().length();
+        String rangeHeader = req.getHeaders().find("Range");
         byte[] arr;
         int[] byteRead;
 
@@ -475,7 +476,14 @@ public class Response implements Closeable {
         }*/
 
         arr = new byte[Config.BODY_BUFFER_SIZE];
-        byteRead = readWithRangeHeader(iStream, arr, Config.BODY_BUFFER_SIZE);
+
+        byteRead = readWithRangeHeader(
+            rangeHeader, 
+            iStream, 
+            arr, 
+            Config.BODY_BUFFER_SIZE
+            );
+
         short resCode = HttpCode.OK;
 
         if (byteRead[0] == -2){
@@ -484,11 +492,11 @@ public class Response implements Closeable {
             return;
         }
 
-        if (fileLength > byteRead[0] + byteRead[1]){
+        if (byteRead[0] + byteRead[1] <= fileLength && !rangeHeader.isEmpty()){
             //Read partially, response with 216 Partial Content
             resCode = HttpCode.PARTIAL_CONTENT;
 
-            int endByte = byteRead[0] + byteRead[1] > fileLength
+            int endByte = byteRead[0] + byteRead[1] >= fileLength
                     ? (int) fileLength - 1
                     : byteRead[0] + byteRead[1];
 
@@ -508,18 +516,16 @@ public class Response implements Closeable {
      *
      * @return the {@code [offset,length]} of how much bytes read, or {@code [0, -1]} if read none and {@code [-2, 0]} if invalid range
      */
-    private int[] readWithRangeHeader(FileInputStream iStream, byte[] arr, int maxLength) throws IOException {
+    private int[] readWithRangeHeader(String rangeHeader, FileInputStream iStream, byte[] arr, int maxLength) throws IOException {
         //TODO support multiple ranges request, currently one range supported only
         //https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
         int offset       = 0;
         int separatorIdx = 0;
         int len          = maxLength;
 
-        String header = req.getHeaders().find("Range");
-
-        if (!header.isEmpty()){
+        if (!rangeHeader.isEmpty()){
             //TODO modify the logic here
-            separatorIdx = header.lastIndexOf("=");
+            separatorIdx = rangeHeader.lastIndexOf("=");
 
             //Usually for single range request, the index would typically look like this
             //Index        0         1
@@ -527,7 +533,7 @@ public class Response implements Closeable {
 
             if (separatorIdx == -1) return new int[]{-2, 0};
 
-            String[] range = header.substring(separatorIdx + 1).split("-");
+            String[] range = rangeHeader.substring(separatorIdx + 1).split("-");
 
             if (!range[0].isEmpty())                     offset = Integer.parseInt(range[0]);
             if (range.length > 1 && !range[1].isEmpty()) len    = Integer.parseInt(range[1]);
@@ -570,13 +576,16 @@ public class Response implements Closeable {
     }
 
     private String processSemanticPath(){
-        if (status == HttpCode.REQUEST_TIMEOUT || status == HttpCode.GATEWAY_TIMEOUT)
+        if (req == null){
+            if (status == HttpCode.REQUEST_TIMEOUT || status == HttpCode.GATEWAY_TIMEOUT)
             return "[Timeout]";
 
-        if (status == HttpCode.INTERNAL_SERVER_ERROR)
-            return "[Server error]";
+            if (status == HttpCode.INTERNAL_SERVER_ERROR)
+                return "[Server error]";
 
-        if (req == null){
+            if (status == HttpCode.BAD_REQUEST)
+                return "[Bad request]";
+
             if (!isHandshakeCompleted)
                 return "[SSL handshake]";
             else
