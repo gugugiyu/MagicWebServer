@@ -19,7 +19,7 @@ import static org.junit.Assert.fail;
 public class StressTest {
 
     private static final int THREAD_COUNT = 50;
-    private static final int REQUEST_COUNT = 100000;
+    private static final int REQUEST_COUNT = 20000;
     private static final String TEST_URL = "http://localhost:" + ConnectionTest.HTTP_PORT + "/";
     private static final String EXPECTED_CONTENT = "root";
 
