@@ -3,7 +3,10 @@ package com.github.magic.core.config;
 import com.github.magic.core.utils.VersionFinder;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public final class Config {
     private Config(){}
@@ -13,7 +16,7 @@ public final class Config {
     ////////////////////////////////////////
 
     //The root directory of the server (the MagicWebServer directory)
-    public static final String ROOT_DIR = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParentFile().getParent();
+    public static final String ROOT_DIR = URLDecoder.decode(new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParent(), StandardCharsets.UTF_8);
 
     //Maximum time allow for each thread to process the request and produce the response (ms)
     public static final int THREAD_TIMEOUT_DURATION = 5000;
@@ -53,7 +56,7 @@ public final class Config {
     // Serving config                     //
     ////////////////////////////////////////
 
-    public static final String STATIC_DIR = ROOT_DIR + "\\data";
+    public static final String STATIC_DIR = ROOT_DIR + "\\src\\main\\resources\\data";
 
     //Used for "Keep-Alive" header, "max" field
     public static final int MAX_SERVE_PER_CONNECTION = 100;
