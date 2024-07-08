@@ -15,11 +15,9 @@ public class GZIPEncoder extends Encoder {
     }
 
     @Override
-    public byte[] encode(byte[] text, int length) throws IOException {
-        //System.out.println("Before encode: " + length);
-
+    public byte[] encode(byte[] data, int length) throws IOException {
         //Compress and close the gzip stream
-        gzipStream.write(text, 0, length);
+        gzipStream.write(data, 0, length);
         gzipStream.close();
 
         return streamBuffer.toByteArray();

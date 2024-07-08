@@ -73,11 +73,17 @@ public class Request {
         }
     }
 
-    private void extractRequestLine(InputStream data) throws IOException, IllegalArgumentException {
+    /**
+     * Get the request line of any request, typically looks like: "GET /testPath HTTP/1.1"
+     * 
+     * @param iStream the input stream contain the request data
+     * @throws IOException exception may raise when reading from the input stream
+     */
+    private void extractRequestLine(InputStream iStream) throws IOException {
         //Parse the method, version and path from the request line;
         //Index: 0        1        2
         //Data : [method] [path]   [version]
-        int c = data.read();
+        int c = iStream.read();
         int firstSpaceIdx = 0;
 
         String requestLine = "";
@@ -95,7 +101,7 @@ public class Request {
             }
 
             requestLine += (char) c;
-            c = data.read();
+            c = iStream.read();
         }
 
         String[] firstLineTokens = requestLine.split(" ");
@@ -136,9 +142,15 @@ public class Request {
         }
     }
 
-    private void extractHeaders(InputStream data) throws IOException {
+    /**
+     * Gets all the headers sent from the request and insert them into the {@link #headers} field
+     * 
+     * @param iStream the input stream contain the request data
+     * @throws IOException exception may raise when reading from the input stream
+     */
+    private void extractHeaders(InputStream iStream) throws IOException {
         //Parse the header pairs
-        int c = data.read();
+        int c = iStream.read();
         String line = "";
 
         //While we're not at the EOF
@@ -163,7 +175,7 @@ public class Request {
                 line = "";
             }
 
-            c = data.read();
+            c = iStream.read();
         }
 
         //We can resolve the hostname here if the host header is available
@@ -172,24 +184,31 @@ public class Request {
         requestOrigin = URI.create(hostHeader);
     }
 
-    private void extractBody(InputStream data) {
+    /**
+     * Read and write the request's body into the {@link #content} field of this class
+     * @param iStream
+     */
+    private void extractBody(InputStream iStream) {
         ByteArrayOutputStream returnStream = new ByteArrayOutputStream();
 
         try {
-            //Http body from request side is optional, so we might need to check the input stream to see if there's any more character to read in
-            int possibleReadWithoutBlocking = data.available();
+            //Request's body is optional, so we need to check in order not to accidentally block the parsing process
+            int possibleReadWithoutBlocking = iStream.available();
 
             if (possibleReadWithoutBlocking > 0) {
                 for (int i = 0; i < possibleReadWithoutBlocking; i++) {
-                    returnStream.write(data.read());
+                    returnStream.write(iStream.read());
                 }
             }
-        } catch (IOException ignored) {
-        }
+        } catch (IOException ignored) {}
 
         this.content = returnStream.toByteArray();
     }
 
+    /**
+     * Get the http method of the request
+     * @return The retrieved http method 
+     */
     public HttpMethod getMethod() {
         return method;
     }
@@ -198,10 +217,14 @@ public class Request {
         return headers;
     }
 
+    /**
+     * Get the byte array form of the parsed request body
+     * @return The retrieved byte array
+     */
     public byte[] bodyRaw() {
         return content;
     }
-
+    
     public String body(Charset charset) {
         return new String(content, charset);
     }
@@ -243,5 +266,9 @@ public class Request {
 
     public void setMethod(HttpMethod method) {
         this.method = method;
+    }
+
+    public void setParams(Map<String, String> params){
+        this.params = params;
     }
 }

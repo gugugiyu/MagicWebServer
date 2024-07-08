@@ -3,39 +3,11 @@ package com.github.magic.core.config;
 import com.github.magic.core.utils.VersionFinder;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 
 public final class Config {
     private Config(){}
-
-    ////////////////////////////////////////
-    // Server config                      //
-    ////////////////////////////////////////
-
-    //The root directory of the server (the MagicWebServer directory)
-    public static final String ROOT_DIR = URLDecoder.decode(new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParent(), StandardCharsets.UTF_8);
-
-    //Maximum time allow for each thread to process the request and produce the response (ms)
-    public static final int THREAD_TIMEOUT_DURATION = 5000;
-
-    //The min number of active thread per server (int)
-    public static final int CORE_POOL_SIZE = 10;
-
-    //The maximum number of thread to spawn when the request queue is full and require more threads to handle (int)
-    public static final int MAX_POOL_SIZE = 20;
-
-    //The time for extra threads (created when the queue is full) should stay idle for (s)
-    public static final long KEEP_ALIVE_TIME = 500;
-
-    //The time it takes to block the flow while InputStream is reading (Sent 408 Request Timeout in case this number is exceeded) (ms)
-    public static final int THREAD_REQUEST_READ_TIMEOUT_DURATION = 10000;
-
-    //Default host IP (bind to everything)
-    public static final InetSocketAddress DEFAULT_HOST_IP = new InetSocketAddress("localhost", 80);
-
+    
     ////////////////////////////////////////
     // SSL/HTTPS config                   //
     ////////////////////////////////////////
@@ -56,7 +28,7 @@ public final class Config {
     // Serving config                     //
     ////////////////////////////////////////
 
-    public static final String STATIC_DIR = ROOT_DIR + "\\src\\main\\resources\\data";
+    public static final String STATIC_DIR = ROOT_DIR + "\\data";
 
     //Used for "Keep-Alive" header, "max" field
     public static final int MAX_SERVE_PER_CONNECTION = 100;

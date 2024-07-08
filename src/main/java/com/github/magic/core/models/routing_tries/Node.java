@@ -267,7 +267,7 @@ public class Node implements Cloneable{
                 isMatched = false;
 
                 for (Node child : returnNode.children) {
-                    isRegexMatched = isChildTokenRegex(compareStr, child.token) != null;
+                    isRegexMatched = isTokenRegex(compareStr, child.token) != null;
 
                     if (!child.getHttpMethod().equals(getHttpMethod()))
                         continue;
@@ -276,7 +276,7 @@ public class Node implements Cloneable{
                         //Regexes also have asterisk, but they're interpreted differently
                         //So we'll have make sure which one is matching here
 
-                        isMatched = handleWildcard(iterator, tokens, child.token, compareStr);
+                        isMatched = handleWildcard(iterator, tokens, child.token);
                     } else if (child.token.startsWith(":") && child.token.length() > 1) {
                         //Route parameter without name will be treated as literal string ":"
                         //Skip the colon ":"
@@ -316,20 +316,42 @@ public class Node implements Cloneable{
             return isFound ? returnNode : null;
         }
 
-        private boolean handleWildcard(int iterator, String[] tokens, String wildcardToken, String splitToken) {
+        /**
+         * Handle both the asterisk used within the regexes and the wilcard symbol itself. When the use case of wildcard symbol is detected,
+         * the attribute {@code wilcardPath} will be inserted with the value of the remaining path from the matched position.
+         * 
+         * <br>
+         * <br>
+         * 
+         * <b>Example:</b>
+         * Register path: /test/* 
+         * <br>
+         * Actualy path: "/test/value1/123" 
+         * <br>
+         * wilcardPath: value1/123 
+         * <br>
+         * 
+         * @see #findTraverse(Node, String[])
+         * 
+         * @param iterator the index of the current element from {@code tokens} list
+         * @param tokens the list of tokens having delimiter of "/"
+         * @param wildcardToken the wildcard token regisred in the tree
+         * @return true if either regex case or the wildcard symbol matched. Otherwise returns false
+         */
+        private boolean handleWildcard(int iterator, String[] tokens, String wildcardToken) {
             //Wildcard handling
             int wildCardIdx = wildcardToken.indexOf("*");
 
             //Check if is there any affixes
             String prefix = wildcardToken.substring(0, wildCardIdx);
 
-            //Suffix can be out of bound
             String suffix = "";
-
+            
+            //Suffix can be out of bound
             if (wildCardIdx + 1 <= wildcardToken.length())
                 suffix = wildcardToken.substring(wildCardIdx + 1);
 
-            if (splitToken.startsWith(prefix) && splitToken.endsWith(suffix)){
+            if (tokens[iterator].startsWith(prefix) && tokens[iterator].endsWith(suffix)){
                 String[] remainingTokens = Arrays.copyOfRange(tokens, iterator, tokens.length);
                 String joinedEndpoint = String.join("/", remainingTokens);
 
@@ -341,19 +363,30 @@ public class Node implements Cloneable{
             return false;
         }
 
-        private String isChildTokenRegex(String splitToken, String childToken) {
+        /**
+         * Try to get the regex pattern from the {@code regexToken} then compiles it
+         * 
+         * @see #findTraverse(Node, String[])
+         * 
+         * @param compareStr the string to be compiled
+         * @param regexToken the string with (potential) regex
+         * @return a string matching the regex from {@code compareStr} if found, else return null
+         */
+        private String isTokenRegex(String compareStr , String regexToken) {
             RegexMatcher regexMatcher = new RegexMatcher();
 
             String retGroup;
 
-            if (childToken.startsWith(":")) {
+            if (regexToken.startsWith(":")) {
                 //Regex can also be used in route parameter, and is encapsulated between parentheses (())
-                //If the route was syntactically correct, the closing parenthesis should be at the last index
-                childToken = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
+                regexToken = regexToken.substring(
+                    Math.max(regexToken.indexOf("(") + 1, 0), 
+                    regexToken.length() - 1
+                    );
             }
 
             try {
-                retGroup = regexMatcher.check(splitToken, childToken);
+                retGroup = regexMatcher.check(compareStr, regexToken);
             } catch (PatternSyntaxException e) {
                 return null; //Invalid regex, or regex isn't provided
             }

@@ -44,12 +44,9 @@ public class Response implements Closeable {
 
     private boolean isHandshakeCompleted;
 
-    private boolean defaultHeader; //Auto-generated header
-
     public Response(OutputStream oStream) throws IOException {
         this.req = null;
         this.isHeaderSent = false;
-        this.defaultHeader = true;
 
         this.oStream = new ResponseOutputStream(oStream);
         this.headers = new Headers();
@@ -163,37 +160,44 @@ public class Response implements Closeable {
         return new ResponseOutputStream(out);
     }
 
-    public void send(byte[] text, int length, Date dateModified, String mimeType, short status) {
+
+    /**
+     * The base method of sending back the response
+     * 
+     * @see #send(String)
+     * @see #send(String, String, short)
+     * @see FileAttributeRetriever#getMimeType()
+     * 
+     * @param byteArr the array of bytes as the response body
+     * @param length the actualy length of the body, passing negative value would be interpreted as using {@code byteArr.length}
+     * @param dateModified the last date the content was modifed. Passing {@code null} would take current day instead
+     * @param mimeType the mimeType of the content
+     * @param status the http status code
+     */
+    public void send(byte[] byteArr, int length, Date dateModified, String mimeType, short status) {
         this.status = status;
 
-        int realLength = length > 0 ? length : text.length; //Length could be -1, indicating this method to use text.length instead
-
+        int realLength = length > 0 ? length : byteArr.length;
         byte[] content = null;
 
-        // Encode the response. Typically, we should encode this it if the file is too large
-        // or the file type of the current file isn't compressed by nature
-
         try{
+            // Encode the response. Typically, we should encode this it if the file is too large
+            // or the file type of the current file isn't compressed by nature
             if (encoder != null && length > Config.COMPRESS_THRESHOLD) {
-                //Readjust the length
-                content = encoder.encode(text, realLength);
-            }
-
-            if (content == null){
-                content = new byte[realLength];
-                System.arraycopy(text, 0, content, 0, realLength);
+                content = encoder.encode(byteArr, realLength);
             }
 
             if (!isHeaderSent){
-                prepareHeader(dateModified, content.length, mimeType);
+                prepareHeader(dateModified, realLength, mimeType);
                 sendHeaders();
                 isHeaderSent = true;
             }
 
             if (!discardBody)
-                oStream.write(content, 0, content.length);
+                oStream.write(content == null ? byteArr : content, 0, realLength);
 
         } catch (IOException e){
+            e.printStackTrace();
             if (Config.SHOW_ERROR) System.err.println("[-] Failed to serve: " + (req == null ? "[Unable to get req path]" : req.getPath().getPath()));
             return;
         }
@@ -206,16 +210,32 @@ public class Response implements Closeable {
                     semanticPath,
                     status,
                     HttpDes.statuses[status],
-                    Formatter.getFormatedLength(content.length)
+                    Formatter.getFormatedLength(realLength)
             );
         }
     }
 
+    /**
+     * Performs a redirect
+     * 
+     * @param url the url to be redirected to
+     * @throws IOException when given url is invalid
+     */
     public void redirect(String url) throws IOException {
         redirect(url, true);
     }
 
-    /* Borrowed from jhttp */
+    
+    /**
+     * Borrowed from jhttp: <br>
+     * Perform a redirect
+     * 
+     * @see #redirect(String)
+     *
+     * @param url the url to be redirected to
+     * @param permanent tells if this redirect if pernament
+     * @throws IOException when given url is invalid
+     */
     public void redirect(String url, boolean permanent) throws IOException {
         try {
             url = new URI(url).toASCIIString();
@@ -233,10 +253,12 @@ public class Response implements Closeable {
     }
 
     /**
-     * Send back the response with just the text and any custom HTTP status in the HTTPCode range (0 <= code <= 600)
+     * Send back the response with just the text and any custom HTTP status
+     * 
+     * @see #send(byte[], int, Date, String, short)
      *
      * @param text The text to be sent (Leave blank or empty equals discarding body)
-     * @param status The status to be returned
+     * @param status The http code
      */
     public void send(String text, String mimeType, short status){
         if (text.isEmpty() || text.isBlank())
@@ -246,9 +268,10 @@ public class Response implements Closeable {
     }
 
     /**
-     * Send back the response with just any string of text, the code will default to be 200 OK
-     *
-     * @param text The text to be sent
+     * Send back the response with just any string of text
+     * 
+     * @see #send(String, String, short)
+     * @param text The text to be sent (Leave blank or empty equals discarding body)
      */
     public void send(String text){
         send(text.trim(), "text/plain", HttpCode.OK);
@@ -257,11 +280,13 @@ public class Response implements Closeable {
     /**
      * Send back the response, but overwrite the MIME-type of the content to be "application/json" instead
      *
-     * @param text The text to be sent
+     * @see #send(String, String, short)
+     * 
+     * @param text The text to be sent (Leave blank or empty equals discarding body)
      * @param status The status to be returned
      */
     public void json(String text, short status){
-        send(text.trim().getBytes(), -1, null, "application/json", status);
+        send(text.trim(), "application/json", status);
     }
 
     /**
@@ -291,12 +316,26 @@ public class Response implements Closeable {
     }
 
 
-    //Auto generate the error header and body
+    /**
+     * Even a more concise way to send back error code to user, uses {@link HttpDes#statuses} description list as for the body message
+     * 
+     * @see #sendError(short, String)
+     * 
+     * @param status the http status code
+     */
     public void sendError(short status){
         //The message will be displayed to the client side
         sendError(status, HttpDes.statuses[status]);
     }
 
+    /**
+     * Send back error to user with the status code and a custom message for the body message
+     * 
+     * @see #send(byte[], int, Date, String, short)
+     * 
+     * @param status the http status code
+     * @param errorText the custom error message
+     */
     public void sendError(short status, String errorText){
         //TODO need more fault-tolerance error here
         if (status != HttpCode.NOT_FOUND)
@@ -363,14 +402,26 @@ public class Response implements Closeable {
         }
     }
 
+    /**
+     * Send the response line independently
+     * 
+     * @see #sendHeaders()
+     * 
+     * @throws IOException i/o error when sending
+     */
     private void sendResponseLine() throws IOException {
         //Compose and write the response line
-        String responseLine = "HTTP/1.1 " + status + " " + HttpDes.statuses[status];
+        String responseLine = "HTTP/" + req.getVersion() + " " + status + " " + HttpDes.statuses[status];
 
         oStream.write(responseLine.getBytes(StandardCharsets.UTF_8));
         oStream.write(Misc.CRLF);
     }
 
+    /**
+     * Send BOTH the {@link #sendResponseLine()} and the headers of the current response
+     * 
+     * @throws IOException i/o error when sending
+     */
     private void sendHeaders() throws IOException {
         sendResponseLine();
 
@@ -378,6 +429,15 @@ public class Response implements Closeable {
         headers.write(oStream);
     }
 
+    /**
+     * Basically the send method, but with {@code Content-Disposition} header set
+     * 
+     * @see #send(byte[], int, Date, String, short)
+     * 
+     * @param path The path of the file to be downloaded
+     * @param fileName The name of the file
+     * @throws IOException i/o error when sending
+     */
     public void download(String path, String fileName) throws IOException{
         if (fileName.isEmpty() || fileName.isBlank())
             return;
@@ -426,10 +486,14 @@ public class Response implements Closeable {
     }
 
     /**
-     * Se
+     * Read and call the {@link #send(byte[], int, Date, String, short)} method to send the file. This method support 206 Partial Content type of response
+     * when the "Range" header is found
+     * 
+     * @see #readWithRangeHeader(String, FileInputStream, byte[], int)
+     * @see #send(byte[], int, Date, String, short)
      *
      * @param dir The base directory of the file
-     * @throws IOException
+     * @throws IOException i/o error when sending
      */
     private void readAndSendFile(FileAttributeRetriever dir) throws IOException {
         FileInputStream iStream = new FileInputStream(dir.file());
@@ -543,6 +607,14 @@ public class Response implements Closeable {
         return new int[]{offset, iStream.read(arr, 0, len)};
     }
 
+    /**
+     * Returns the index page of all the files within that directory. Currently using inline html template
+     * 
+     * @see #sendFile(FileAttributeRetriever, String)
+     * 
+     * @param dir the directory
+     * @param rawPath the raw path from the request
+     */
     private void serveDirectory(FileAttributeRetriever dir, String rawPath) {
         //Mimic behavior of Apache Web server
 
@@ -614,34 +686,74 @@ public class Response implements Closeable {
         }
     }
 
+        /**
+     * Sets the status.
+     *
+     * @param status the new status to set
+     */
     public void setStatus(short status) {
         this.status = status;
     }
 
+    /**
+     * Gets the headers.
+     *
+     * @return the headers
+     */
     public Headers getHeaders() {
         return headers;
     }
 
+    /**
+     * Sets whether to discard the body.
+     *
+     * @param discardBody true to discard the body, false otherwise
+     */
     public void setDiscardBody(boolean discardBody) {
         this.discardBody = discardBody;
     }
 
+    /**
+     * Sets the host origin.
+     *
+     * @param hostOrigin the new host origin to set
+     */
     public void setHostOrigin(String hostOrigin) {
         this.hostOrigin = hostOrigin;
     }
 
+    /**
+     * Gets the output stream.
+     *
+     * @return the output stream
+     */
     public OutputStream getOutputStream() {
         return oStream;
     }
 
+    /**
+     * Sets whether it is a default header.
+     *
+     * @param defaultHeader true if it is a default header, false otherwise
+     */
     public void setDefaultHeader(boolean defaultHeader) {
         this.defaultHeader = defaultHeader;
     }
 
+    /**
+     * Checks if the body should be discarded.
+     *
+     * @return true if the body should be discarded, false otherwise
+     */
     public boolean isDiscardBody() {
         return discardBody;
     }
 
+    /**
+     * Sets whether the header has been sent.
+     *
+     * @param headerSent true if the header has been sent, false otherwise
+     */
     public void setHeaderSent(boolean headerSent) {
         isHeaderSent = headerSent;
     }

@@ -14,7 +14,7 @@ public class TimeoutThreadPool extends ThreadPoolExecutor {
 
     public static TimeoutThreadPool getDefault() {
         //Set up the thread pools
-        ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(100);
+        ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(10);
         RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
 
         TimeoutThreadPool retPool = new TimeoutThreadPool(
@@ -49,6 +49,8 @@ public class TimeoutThreadPool extends ThreadPoolExecutor {
     protected void submitWithTimer(TransactionThread transactionThread, ServerSocket serverSocket) {
         //Handle with Future<?> for timeout
         Future<?> status = submit(transactionThread);
+
+        //System.out.println(getActiveCount());
 
         new Thread(() -> {
             try {
