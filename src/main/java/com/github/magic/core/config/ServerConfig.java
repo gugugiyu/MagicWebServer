@@ -21,15 +21,7 @@ public class ServerConfig {
 
     //Default host IP (bind to everything)
     private InetSocketAddress hostIp = new InetSocketAddress("localhost", 80);
-
-    public String getRootDir() {
-        return rootDir;
-    }
-
-    public void setRootDir(String rootDir) {
-        this.rootDir = rootDir;
-    }
-
+    
     public int getThreadTimeoutDuration() {
         return threadTimeoutDuration;
     }

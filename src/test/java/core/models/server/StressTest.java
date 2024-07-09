@@ -22,7 +22,7 @@ public class StressTest {
 
     private static final int THREAD_COUNT = 30;
     private static final int REQUEST_COUNT = 300000;
-    private static final String TEST_URL = "http://localhost:" + ConnectionTest.HTTP_PORT + "/index";
+    private static final String TEST_URL = "http://localhost:" + ConnectionTest.HTTP_PORT + "/";
     private static final String EXPECTED_CONTENT = "root";
 
     @Test
