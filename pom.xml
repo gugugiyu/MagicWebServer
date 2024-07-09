@@ -90,7 +90,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <mainClass>com.github.magic.examples.Main</mainClass>
+                    <mainClass>com.github.magic.examples.DefaultRoot</mainClass>
                 </configuration>
             </plugin>
         </plugins>
