@@ -22,7 +22,7 @@ public class Server implements Runnable {
     private ServerConfig serverConfig;
 
     private int port;
-    private InetSocketAddress hostIP = serverConfig.getHostIp();
+    private InetSocketAddress hostIP;
 
     private ServerSocketFactory serverSocketFactory;
 
@@ -33,6 +33,7 @@ public class Server implements Runnable {
         this.tries = tries;
         this.port = port;
         this.serverConfig = serverConfig;
+        this.hostIP = serverConfig.getHostIp();
     }
 
     //Default port for http is 80
@@ -74,10 +75,11 @@ public class Server implements Runnable {
 
             if (Config.VERBOSE) System.out.println("[+] Server is listening on port " + port);
 
-            threadPool = TimeoutThreadPool.getDefault();
+            threadPool = TimeoutThreadPool.getDefault(serverConfig);
 
             while (serverSocket != null && !serverSocket.isClosed()) {
                 sock = serverSocket.accept();
+
                 sock.setSoTimeout(serverConfig.getThreadRequestReadTimeoutDuration());
                 sock.setTcpNoDelay(true);
 
@@ -205,5 +207,9 @@ public class Server implements Runnable {
 
     public String getUpgradeInsecureRequestURL() {
         return upgradeInsecureRequestURL;
+    }
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
     }
 }

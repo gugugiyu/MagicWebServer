@@ -4,6 +4,8 @@ import com.github.magic.core.utils.VersionFinder;
 
 import java.io.File;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public final class Config {
     private Config(){}
@@ -28,7 +30,10 @@ public final class Config {
     // Serving config                     //
     ////////////////////////////////////////
 
-    public static final String STATIC_DIR = ROOT_DIR + "\\data";
+    //The root directory of the server (the MagicWebServer directory)
+    public static String ROOT_DIR = URLDecoder.decode(new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParent(), StandardCharsets.UTF_8);
+
+    public static final String STATIC_DIR = ROOT_DIR + "\\src\\main\\resources\\data";
 
     //Used for "Keep-Alive" header, "max" field
     public static final int MAX_SERVE_PER_CONNECTION = 100;
@@ -53,10 +58,10 @@ public final class Config {
     ////////////////////////////////////////
 
     //Toggle verbose mode (shouldn't be used in case of server multi-threading as there's no synchronization process provided)
-    public static final boolean VERBOSE = Boolean.parseBoolean(System.getProperty("verbose") )|| Boolean.parseBoolean(System.getenv("verbose")) ;
+    public static final boolean VERBOSE = Boolean.parseBoolean(System.getProperty("verbose") ) || Boolean.parseBoolean(System.getenv("verbose"));
 
     //Toggle dump error to err stream behavior
-    public static final boolean SHOW_ERROR = true;
+    public static final boolean SHOW_ERROR = Boolean.parseBoolean(System.getProperty("error") )|| Boolean.parseBoolean(System.getenv("error")) ;
 
     public static final int JAVA_VERSION = VersionFinder.getJavaMajorVersion();
 }

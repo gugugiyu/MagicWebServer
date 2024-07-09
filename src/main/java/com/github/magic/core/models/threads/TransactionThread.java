@@ -34,8 +34,7 @@ public class TransactionThread implements Runnable, Closeable {
     private Request req;
 
     //Used for Https connection, so that the request won't accidentally parse the handshake request
-    private boolean        isHandshakeCompleted;
-
+    private boolean isHandshakeCompleted;
 
     public TransactionThread(Socket sock, URITries tries, Server serverInstance) {
         this.sock = sock;
@@ -97,7 +96,7 @@ public class TransactionThread implements Runnable, Closeable {
         HandlerWithParam handlerWithParam = new HandlerWithParam(null, null, null);
 
         //The total amount of request, response cycle can be done through this connection
-        int counter = serverInstance.getServerConfig().getMaxServePerConnection();
+        int counter = Config.MAX_SERVE_PER_CONNECTION;
 
         do {
             req = null;
@@ -112,7 +111,9 @@ public class TransactionThread implements Runnable, Closeable {
                 //Protocol mismatched then close the connection immediately
                 if (req == null || req.isMismatched()) break;
 
-                res = new Response(req, counter, isHandshakeCompleted);
+                res = new Response(req, 
+                        new int[]{Config.MAX_SERVE_PER_CONNECTION, serverInstance.getServerConfig().getThreadRequestReadTimeoutDuration()} ,
+                        isHandshakeCompleted);
 
                 //Only support from version 1.1 downwards
                 if (!compatibleHttpVersion() || upgradeSecure()) break;
@@ -198,7 +199,6 @@ public class TransactionThread implements Runnable, Closeable {
     }
 
     private void handleException(Throwable t) {
-        t.printStackTrace();
         //Connections that are abruptedly disconnected by client doesn't need a response
         if (t.getMessage().startsWith("Connection reset"))
             return;
@@ -286,14 +286,14 @@ public class TransactionThread implements Runnable, Closeable {
         for (Header header : reqHeaders)
             traceBody.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
 
-            traceBodyToString = traceBody.toString();
+        traceBodyToString = traceBody.toString();
 
+        //Remove the default generated headers
+        res.getHeaders().clear();
         res.setHeader("Date", Formatter.convertTime(null));
         res.setHeader("Content-Type", "message/http");
         res.setHeader("Content-Length", "" + traceBodyToString.trim().length());
         res.setHeader("Connection", "close"); // TRACE is meant for debugging purpose, thus persisting this connection has no usage
-
-        res.setDefaultHeader(false);
 
         res.send(traceBodyToString);
 
@@ -301,4 +301,6 @@ public class TransactionThread implements Runnable, Closeable {
         if (req.getRequestSocket().getInputStream().available() > 0)
             StreamTransfer.transfer(req.getRequestSocket().getInputStream(), res.getOutputStream(), -1); // RFC9110#9.3.8 - client must not send content (but we echo it anyway)
     }
+
+
 }

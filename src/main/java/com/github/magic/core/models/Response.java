@@ -8,6 +8,7 @@ import com.github.magic.core.encoder.Encoder;
 import com.github.magic.core.encoder.EncoderFactory;
 import com.github.magic.core.models.header.Header;
 import com.github.magic.core.models.header.Headers;
+import com.github.magic.core.models.threads.TransactionThread;
 import com.github.magic.core.utils.FileAttributeRetriever;
 import com.github.magic.core.utils.Formatter;
 
@@ -22,26 +23,42 @@ import java.util.Date;
 import java.util.List;
 
 public class Response implements Closeable {
-    //The associated request for this response, also can be used for checking client's compatability
+    //The associated request for this response
     private final Request req;
 
+    //THe output stream that will be used to send the response to client
     private final OutputStream oStream;
+
+    //The header list
     private final Headers headers;
+
     //This flag tells if the underlying connection (socket connection) should be closed after this request-response cycle
     private boolean isClosed;
 
+    //Will be set in case the current response needs to be encoded
     private final Encoder encoder;
 
+    //Tells if the header part has already been sent. You can't resend a sent header
     private boolean isHeaderSent;
 
-    private short status; //Http status code of the response
+    //Http status code of the response, is default to 200 OK unless set different
+    private short status = HttpCode.OK; 
 
-    private int reqCounter; //How many request could be handle left (used for Keep-Alive header)
+    //An array with size of 2, trailer values will be ignored
+    //Tells the maximum request that the current socket connection could handle and 
+    //the time when the host will allow an idle connection to remain open before it is closed
+    private final int[] keepAlive = new int[2]; 
 
-    private boolean discardBody; //Used for HEAD http method
+    //Used for HEAD http method, won't send the body of the response
+    private boolean discardBody; 
 
-    private String hostOrigin = "";
-
+    /**
+     * Tells if the current response cycle is trigger by the SSL handshake. 
+     * <br>
+     * All {@code send()} method has no effect when this isn't set to true.
+     * 
+     * @see TransactionThread#isHandshakeCompleted
+     */
     private boolean isHandshakeCompleted;
 
     public Response(OutputStream oStream) throws IOException {
@@ -57,32 +74,30 @@ public class Response implements Closeable {
      * Initialize the response, and decides whether compression should be done for this request
      *
      * @param req the request corresponding to this response
-     * @param reqCounter the number of request to handle before closing this connection
+     * @param keepAlive an int array with size of 2, specify the max request per socket connectiona and idle connection timeout duration. Trailing values is ignored
      * @param isHandshakeCompleted used for logger, indicating if the current socket request still from the ssl handshake
      * @throws IOException when an IO exception occur when trying to write back to the output stream
      */
-    public Response(Request req, int reqCounter, boolean isHandshakeCompleted) throws IOException {
+    public Response(Request req, int[] keepAlive, boolean isHandshakeCompleted) throws IOException {
         this.req = req;
         this.headers = new Headers();
         this.encoder = shouldEncode();
         this.oStream = getOutputStreamType();
 
-        //If the handler force this connection to close (in case of time out request), then let it be
-        this.isClosed = isConnectionClosed();
+        // If the handler force this connection to close (in case of time out request), then let it be
+        // Else we check the value from the "Connection" header from the request 
+        this.isClosed = req.getHeaders().find("Connection").equalsIgnoreCase("close");
 
-        this.reqCounter = reqCounter;
+        //Check the keepAlive field for more infos
+        this.keepAlive[0] = keepAlive[0];
+        this.keepAlive[1] = keepAlive[1] / 1000; //Convert s to ms
+
         this.isHandshakeCompleted = isHandshakeCompleted;
-        this.defaultHeader = true;
         this.isHeaderSent = false;
     }
 
     public boolean isHeaderSent() {
         return isHeaderSent;
-    }
-
-    public boolean isConnectionClosed() {
-        String connectionHeader = req.getHeaders().find("Connection");
-        return connectionHeader.equalsIgnoreCase("close");
     }
 
     /**
@@ -162,7 +177,7 @@ public class Response implements Closeable {
 
 
     /**
-     * The base method of sending back the response
+     * The base method of sending back the response. If {@link #isHandshakeCompleted} isn't true, then calling this method has no effect
      * 
      * @see #send(String)
      * @see #send(String, String, short)
@@ -175,6 +190,9 @@ public class Response implements Closeable {
      * @param status the http status code
      */
     public void send(byte[] byteArr, int length, Date dateModified, String mimeType, short status) {
+        //Skip if SSL handshake isn't completed
+        if (!isHandshakeCompleted) return;
+
         this.status = status;
 
         int realLength = length > 0 ? length : byteArr.length;
@@ -358,10 +376,6 @@ public class Response implements Closeable {
                 : null
         ); //Content-Encoding is an exception, it must be set for every requests
 
-        if (!defaultHeader) {
-            return;
-        }
-
         if (!discardBody){
             //Set the common serving header
             //If error response, no need to set "Last-Modified"
@@ -376,14 +390,13 @@ public class Response implements Closeable {
         }
 
         //Set the "dangerous" (not in the safe list) headers
-        setHeader("Host", hostOrigin);
         setHeader("Server", "MagicWebServer/1.2");
         setHeader("Date", Formatter.convertTime(null));
         setHeader("Connection", isClosed ? "close" : "keep-alive");
         setHeader("Accept-Ranges", "bytes");
 
         if (!isClosed)
-            setHeader("Keep-Alive", "timeout=" + (Config.THREAD_REQUEST_READ_TIMEOUT_DURATION / 1000) + ", max=" + reqCounter);
+            setHeader("Keep-Alive", "timeout=" + keepAlive[1] + ", max=" + keepAlive[0]); //TODO hardcoded
 
         //TODO after done on the cache part, make sure to add Cache-Control, Pragma and Expires (in case of backward compatibility) to here
         //as it's in the safe list
@@ -456,32 +469,43 @@ public class Response implements Closeable {
 
         //Sent as attachment
         setHeader("Content-disposition", "attachment; filename=" + fileName);
-        sendFile(new FileAttributeRetriever(new File(realPath)), path);
+        sendFile(realPath);
     }
 
-    public void sendFile(FileAttributeRetriever dir, String rawPath) throws IOException {
-        if (dir.file().isDirectory()) {
+    /**
+     * Send back a static file from the {@link Config#STATIC_DIR} directory. Generate index page for directory path
+     * 
+     * @param path The path to the static file
+     * @throws IOException I/O Exception may occur when perform writing to the output stream
+     */
+    public void sendFile(String path) throws IOException {
+        if (path.charAt(0) == '.')
+            path = path.substring(1);
+    
+        File file = new File(Config.STATIC_DIR + path);
+        
+        if (file.isDirectory()) {
             //Redirect URL for directories requests that don't start with "/"
-            if (!rawPath.endsWith("/")) {
-                redirect(rawPath + "/", true);
+            if (!path.endsWith("/")) {
+                redirect(path + "/", true);
             } else {
                 //If the path points to the directory, 200 OK
-                serveDirectory(dir, rawPath);
+                serveDirectory(file);
             }
-        } else if (!dir.file().exists()
-                || dir.file().isHidden()
-                || dir.file().getName().startsWith(".")) {
+        } else if (!file.exists()
+                || file.isHidden()
+                || file.getName().startsWith(".")) {
 
             //Not Found
             sendError(HttpCode.NOT_FOUND);
-        } else if (!dir.file().canRead()) {
+        } else if (!file.canRead()) {
 
             //Can't read the file
             //403 Forbidden
             sendError(HttpCode.FORBIDDEN);
         } else {
             //200 OK
-            readAndSendFile(dir);
+            readAndSendFile(file);
         }
     }
 
@@ -495,9 +519,9 @@ public class Response implements Closeable {
      * @param dir The base directory of the file
      * @throws IOException i/o error when sending
      */
-    private void readAndSendFile(FileAttributeRetriever dir) throws IOException {
-        FileInputStream iStream = new FileInputStream(dir.file());
-        long fileLength = dir.file().length();
+    private void readAndSendFile(File file) throws IOException {
+        FileInputStream iStream = new FileInputStream(file);
+        long fileLength = file.length();
         String rangeHeader = req.getHeaders().find("Range");
         byte[] arr;
         int[] byteRead;
@@ -571,7 +595,7 @@ public class Response implements Closeable {
             setHeader("Content-Range","bytes " + byteRead[0] + "-" + endByte + "/" + fileLength);
         }
 
-        send(arr, byteRead[1], new Date(dir.file().lastModified()), dir.getMimeType(), resCode);
+        send(arr, byteRead[1], new Date(file.lastModified()), FileAttributeRetriever.getMimeType(file), resCode);
     }
 
     /**
@@ -610,33 +634,32 @@ public class Response implements Closeable {
     /**
      * Returns the index page of all the files within that directory. Currently using inline html template
      * 
-     * @see #sendFile(FileAttributeRetriever, String)
+     * @see #sendFile(String)
      * 
-     * @param dir the directory
-     * @param rawPath the raw path from the request
+     * @param file the directory
      */
-    private void serveDirectory(FileAttributeRetriever dir, String rawPath) {
+    private void serveDirectory(File file) {
         //Mimic behavior of Apache Web server
 
         StringBuilder template = new StringBuilder("<!DOCTYPE html>\n" +
                 "<html>\n" +
                 " <head>\n" +
-                "  <title>Index of " + rawPath + "</title>\n" +
+                "  <title>Index of " + file.getName() + "</title>\n" +
                 " </head>\n" +
                 " <body>\n" +
-                "<h1>Index of " + rawPath + "</h1>\n" +
+                "<h1>Index of " + file.getName() + "</h1>\n" +
                 "<ul>");
 
         //Retrieve file name from a directory
-        File[] files = dir.file().listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
+        File[] files = file.listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
 
         if (files == null) {
             template.append("<h3> There's no file in this directory </h3>");
         } else {
-            for (File file : files) {
+            for (File item : files) {
                 template.append("<li>").append(buildAnchorLink(
-                        rawPath + file.getName(),
-                        file.isDirectory() ? file.getName() + "/" : file.getName()
+                    item.getName(),
+                    item.isDirectory() ? item.getName() + "/" : item.getName()
                 )).append("</li>");
             }
         }
@@ -658,10 +681,7 @@ public class Response implements Closeable {
             if (status == HttpCode.BAD_REQUEST)
                 return "[Bad request]";
 
-            if (!isHandshakeCompleted)
-                return "[SSL handshake]";
-            else
-                return "[Path unknown]";
+            return "[Path unknown]";
         }
 
         return req.getMethod() + " " + req.getPath().getPath();
@@ -714,30 +734,12 @@ public class Response implements Closeable {
     }
 
     /**
-     * Sets the host origin.
-     *
-     * @param hostOrigin the new host origin to set
-     */
-    public void setHostOrigin(String hostOrigin) {
-        this.hostOrigin = hostOrigin;
-    }
-
-    /**
      * Gets the output stream.
      *
      * @return the output stream
      */
     public OutputStream getOutputStream() {
         return oStream;
-    }
-
-    /**
-     * Sets whether it is a default header.
-     *
-     * @param defaultHeader true if it is a default header, false otherwise
-     */
-    public void setDefaultHeader(boolean defaultHeader) {
-        this.defaultHeader = defaultHeader;
     }
 
     /**

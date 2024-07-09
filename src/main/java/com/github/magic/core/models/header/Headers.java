@@ -117,6 +117,13 @@ public class Headers implements Iterable<Header> {
         return retList;
     }
 
+    /**
+     * Clear the current header list. If called on an empty list, this method has no effect
+     */
+    public void clear(){
+        headers.clear();
+    }
+
     @Override
     public Iterator<Header> iterator() {
         return headers.iterator();

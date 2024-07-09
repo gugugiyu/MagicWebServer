@@ -1,11 +1,9 @@
 package com.github.magic.core.config;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 
 public class ServerConfig {
-    //The root directory of the server (the MagicWebServer directory)
-    private String rootDir = new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParentFile().getParent();
-
     //Maximum time allow for each thread to process the request and produce the response (ms)
     private int threadTimeoutDuration = 5000;
 

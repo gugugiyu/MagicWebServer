@@ -1,6 +1,7 @@
 package com.github.magic.core.models.server;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.models.threads.TransactionThread;
 
 import java.io.IOException;
@@ -8,22 +9,26 @@ import java.net.ServerSocket;
 import java.util.concurrent.*;
 
 public class TimeoutThreadPool extends ThreadPoolExecutor {
-    private TimeoutThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler) {
+    private ServerConfig config;
+
+    private TimeoutThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler, ServerConfig config) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+        this.config = config;
     }
 
-    public static TimeoutThreadPool getDefault() {
+    public static TimeoutThreadPool getDefault(ServerConfig config) {
         //Set up the thread pools
         ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(10);
         RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
 
         TimeoutThreadPool retPool = new TimeoutThreadPool(
-                Config.CORE_POOL_SIZE,
-                Config.MAX_POOL_SIZE,
-                Config.KEEP_ALIVE_TIME,
+                config.getCorePoolSize(),
+                config.getMaxPoolSize(),
+                config.getKeepAliveTime(),
                 TimeUnit.SECONDS,
                 workQueue,
-                handler
+                handler,
+                config
         );
 
         return retPool;
@@ -54,7 +59,7 @@ public class TimeoutThreadPool extends ThreadPoolExecutor {
 
         new Thread(() -> {
             try {
-                status.get(Config.THREAD_TIMEOUT_DURATION, TimeUnit.MILLISECONDS);
+                status.get(config.getThreadTimeoutDuration(), TimeUnit.MILLISECONDS);
             } catch (InterruptedException | TimeoutException | ExecutionException e) {
                 status.cancel(true);
                 transactionThread.close(); //Serve back 500 Internal Server Error case
