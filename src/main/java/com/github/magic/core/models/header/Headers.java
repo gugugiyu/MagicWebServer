@@ -50,6 +50,12 @@ public class Headers implements Iterable<Header> {
         return "";
     }
 
+    /**
+     * Write all fields of the current header list into the "key: value" format, CRLF end-of-line behavior
+     * 
+     * @param out the output stream to be write to
+     * @throws IOException
+     */
     public void write(OutputStream out) throws IOException {
         for (Header header : headers) {
             out.write((header.getKey() + ": " + header.getValue()).getBytes());
@@ -109,6 +115,13 @@ public class Headers implements Iterable<Header> {
         }
 
         return retList;
+    }
+
+    /**
+     * Clear the current header list. If called on an empty list, this method has no effect
+     */
+    public void clear(){
+        headers.clear();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.github.magic.core.models.server;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.middleware.Middleware;
 import com.github.magic.core.models.routing_tries.URITries;
 import com.github.magic.core.models.threads.ShutdownThread;
@@ -18,30 +19,38 @@ import java.util.List;
 
 public class Server implements Runnable {
     private final URITries tries;
+    private ServerConfig serverConfig;
 
     private int port;
-    private InetSocketAddress hostIP = Config.DEFAULT_HOST_IP;
+    private InetSocketAddress hostIP;
 
     private ServerSocketFactory serverSocketFactory;
 
     private String upgradeInsecureRequestURL = "";
 
-    public Server(int port, URITries tries) {
+
+    public Server(int port, URITries tries, ServerConfig serverConfig) {
         this.tries = tries;
         this.port = port;
+        this.serverConfig = serverConfig;
+        this.hostIP = serverConfig.getHostIp();
     }
 
     //Default port for http is 80
     public Server(URITries tries) {
-        this(80, tries);
+        this(80, tries, new ServerConfig());
     }
 
     public Server(int port) {
-        this(port, new URITries());
+        this(port, new URITries(), new ServerConfig());
+    }
+
+    public Server(ServerConfig serverConfig){
+        this(80, new URITries(), serverConfig);
     }
 
     public Server() {
-        this(80, new URITries());
+        this(80, new URITries(), new ServerConfig());
     }
 
     public synchronized void listen(){
@@ -55,6 +64,7 @@ public class Server implements Runnable {
             ServerSocket serverSocket;
             Socket sock;
             TransactionThread transactionThread;
+            TimeoutThreadPool threadPool;
 
             try {
                 serverSocket = configureServer();
@@ -65,11 +75,12 @@ public class Server implements Runnable {
 
             if (Config.VERBOSE) System.out.println("[+] Server is listening on port " + port);
 
-            TimeoutThreadPool threadPool = TimeoutThreadPool.getDefault();
+            threadPool = TimeoutThreadPool.getDefault(serverConfig);
 
             while (serverSocket != null && !serverSocket.isClosed()) {
                 sock = serverSocket.accept();
-                sock.setSoTimeout(Config.THREAD_REQUEST_READ_TIMEOUT_DURATION);
+
+                sock.setSoTimeout(serverConfig.getThreadRequestReadTimeoutDuration());
                 sock.setTcpNoDelay(true);
 
                 transactionThread = new TransactionThread(sock, tries, this);
@@ -80,6 +91,7 @@ public class Server implements Runnable {
         } catch (IOException e) {
             if (Config.SHOW_ERROR) System.err.println("[-] Exception occur. Using port: " + port);
         }
+
     }
 
     protected ServerSocket configureServer() throws IOException {
@@ -195,5 +207,9 @@ public class Server implements Runnable {
 
     public String getUpgradeInsecureRequestURL() {
         return upgradeInsecureRequestURL;
+    }
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
     }
 }

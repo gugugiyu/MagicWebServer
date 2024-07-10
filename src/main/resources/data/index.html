@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Web Server - Demo</title>
+
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        .content-wrapper{
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .headerImg{
+            height: 50%;
+        }
+
+        .headerImg img{
+            width: 100%;
+            object-fit: contain;
+            height: 100%;
+        }
+
+        .text-wrapper .noti-text{
+            color: green;
+        }
+
+        .text-wrapper .greet-title{
+            text-align: center;
+            width: 75%;
+            margin-top: 1rem;
+        }
+
+        .text-wrapper{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .text-wrapper .greet-description{
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        .text-wrapper .homepage-link{
+            margin-top: 1rem;
+        }
+
+        .credit-text{
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <p class="credit-text">Illustration from <a href="https://storyset.com/">Storyset</a></p>
+    <div class="content-wrapper">
+        <section class="headerImg">
+            <img src="./castle.png" alt="200_ok cat image from http.cat">
+        </section>
+        <div class="text-wrapper">
+            <h1 class="noti-text">Magic Web Server has launched successfully</h1>
+            <h2 class="greet-title">You're seeing this page because you're following the static file serve example</h2>
+            <p class="greet-description">You may want to explore more examples, or tweaking around the html structure of this page to see changes.</p>
+            <a href="/" class="homepage-link">Back to home page</a>
+        </div>
+    </div>
+</body>
+</html>

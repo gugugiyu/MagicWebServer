@@ -34,8 +34,7 @@ public class TransactionThread implements Runnable, Closeable {
     private Request req;
 
     //Used for Https connection, so that the request won't accidentally parse the handshake request
-    private boolean        isHandshakeCompleted;
-
+    private boolean isHandshakeCompleted;
 
     public TransactionThread(Socket sock, URITries tries, Server serverInstance) {
         this.sock = sock;
@@ -71,8 +70,6 @@ public class TransactionThread implements Runnable, Closeable {
         if (res == null)
             return;
 
-        res.sendError(HttpCode.INTERNAL_SERVER_ERROR);
-
         //Handle just like the run method
         try{
             try {
@@ -96,7 +93,7 @@ public class TransactionThread implements Runnable, Closeable {
             isHandshakeCompleted = true;
         }
 
-        HandlerWithParam handlerWithParam;
+        HandlerWithParam handlerWithParam = new HandlerWithParam(null, null, null);
 
         //The total amount of request, response cycle can be done through this connection
         int counter = Config.MAX_SERVE_PER_CONNECTION;
@@ -112,26 +109,25 @@ public class TransactionThread implements Runnable, Closeable {
                 req = new Request(sock);
 
                 //Protocol mismatched then close the connection immediately
-                if (req.isMismatched()) break;
+                if (req == null || req.isMismatched()) break;
 
-                res = new Response(req, counter, isHandshakeCompleted);
+                res = new Response(req, 
+                        new int[]{Config.MAX_SERVE_PER_CONNECTION, serverInstance.getServerConfig().getThreadRequestReadTimeoutDuration()} ,
+                        isHandshakeCompleted);
 
                 //Only support from version 1.1 downwards
-                if (!compatibleHttpVersion()) break;
-
-                //Check for insecure upgrade request
-                if (upgradeSecure()) break;
+                if (!compatibleHttpVersion() || upgradeSecure()) break;
 
                 handlerWithParam = tries.find(req.getMethod(), req.getPath().getPath());
 
-                req.params = handlerWithParam.getParams();
+                req.setParams(handlerWithParam.params());
 
-                if (handlerWithParam.getHandler() == null) {
+                if (handlerWithParam.handler() == null) {
                     // use default version
                     handleDefaultMethod();
                 } else {
                     //Only run the subsequent middlewares and the main handler if none former middlewares have served the response
-                    List<Middleware> middlewares = handlerWithParam.getMiddlewares();
+                    List<Middleware> middlewares = handlerWithParam.middlewares();
                     Queue<Middleware> callStack = new LinkedList<>(middlewares);
 
                     while (!callStack.isEmpty()){
@@ -148,7 +144,7 @@ public class TransactionThread implements Runnable, Closeable {
                         });
                     }
 
-                    handlerWithParam.getHandler().handle(req, res);
+                    handlerWithParam.handler().handle(req, res);
                 }
             } catch (Throwable t) {
                 handleException(t);
@@ -161,6 +157,13 @@ public class TransactionThread implements Runnable, Closeable {
         } while (transactionContinue());
     }
 
+    /**
+     * When no handler for the current resource is provided, this method will be invoked
+     * 
+     * Current support {@link HttpMethod}
+     * 
+     * @throws IOException
+     */
     protected void handleDefaultMethod() throws IOException {
         switch (req.getMethod()){
             case GET:
@@ -196,16 +199,15 @@ public class TransactionThread implements Runnable, Closeable {
     }
 
     private void handleException(Throwable t) {
+        //Connections that are abruptedly disconnected by client doesn't need a response
+        if (t.getMessage().startsWith("Connection reset"))
+            return;
+           
         if (req == null) {
-            //Failed parsing request
-            if (t instanceof IOException && t.getMessage().contains("line"))
+            //Failed parsing request or timeout
+            if (t instanceof InterruptedIOException || 
+                t instanceof IOException && t.getMessage().contains("line"))
                 return;
-
-            //Socket timeout, current thread interrupted
-            if (t instanceof InterruptedIOException){
-                res.sendError(HttpCode.REQUEST_TIMEOUT);
-                return;
-            }
 
             // RFC9112#3 - must return 414 if URI is too long
             if (t instanceof IOException && t.getMessage().contains("URI too long")){
@@ -213,14 +215,10 @@ public class TransactionThread implements Runnable, Closeable {
                 return;
             }
 
-            if (!isHandshakeCompleted) {
-                res.send("", "text/plain", HttpCode.CONTINUE);
-            } else {
-                //TODO redirect header conflict between "Transfer-Encoding" and "Content-Encoding" to this case
+            if (isHandshakeCompleted) 
                 res.sendError(HttpCode.BAD_REQUEST, "Invalid request: " + t.getMessage());
-            }
         } else {
-            res.sendError(HttpCode.INTERNAL_SERVER_ERROR, "Error processing request: " + t.getMessage());
+            res.sendError(HttpCode.INTERNAL_SERVER_ERROR, "Server error :(\nHere's what happened: " + t.getMessage());
         }
     }
 
@@ -234,6 +232,11 @@ public class TransactionThread implements Runnable, Closeable {
         return true;
     }
 
+    /**
+     * Redirect
+     * @return
+     * @throws IOException
+     */
     private boolean upgradeSecure() throws IOException {
         if (serverInstance instanceof SSLServer)
             return false;
@@ -253,21 +256,27 @@ public class TransactionThread implements Runnable, Closeable {
         return true;
     }
 
+    /**
+     * Decide whether this current http session should continue. By default, any Http/1.1 connection will be persistent, unless explicitly specified "Connection"
+     * header's value to be "close"
+     * 
+     * @return flag tells if the current connection should be continue
+     */
     private boolean transactionContinue(){
         String reqConnectionStatus = req.getHeaders().find("Connection");
-        String resConnectionStatus = res.getHeaders().find("Connection");
 
-        //No "Connection" header will be deemed as non-persistent connection
-        return  !reqConnectionStatus.isEmpty()
+        return  reqConnectionStatus.isEmpty()
                 && !"close".equalsIgnoreCase(reqConnectionStatus)
-                && resConnectionStatus.isEmpty()
-                && !"close".equalsIgnoreCase(res.getHeaders().find("Connection"))
-                && req.getVersion().equalsIgnoreCase("1.1");
+                && !req.getVersion().equalsIgnoreCase("1.0");
     }
 
+    /**
+     * Handles TRACE http method. This method is default to be always non-persistent
+     * @throws IOException
+     */
     private void handleTrace() throws IOException{
         StringBuilder traceBody = new StringBuilder();
-        String traceBodyConverted;
+        String traceBodyToString;
 
         traceBody.append("TRACE ").append(req.getPath().toString()).append(" HTTP/").append(req.getVersion()).append("\r\n");
 
@@ -277,19 +286,21 @@ public class TransactionThread implements Runnable, Closeable {
         for (Header header : reqHeaders)
             traceBody.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
 
-        traceBodyConverted = traceBody.toString();
+        traceBodyToString = traceBody.toString();
 
+        //Remove the default generated headers
+        res.getHeaders().clear();
         res.setHeader("Date", Formatter.convertTime(null));
         res.setHeader("Content-Type", "message/http");
-        res.setHeader("Content-Length", "" + traceBodyConverted.trim().length());
+        res.setHeader("Content-Length", "" + traceBodyToString.trim().length());
         res.setHeader("Connection", "close"); // TRACE is meant for debugging purpose, thus persisting this connection has no usage
 
-        res.setDefaultHeader(false);
+        res.send(traceBodyToString);
 
-        res.send(traceBodyConverted);
-
-        //Only consume if input is not previously blocked
+        //Only consume if input's available
         if (req.getRequestSocket().getInputStream().available() > 0)
             StreamTransfer.transfer(req.getRequestSocket().getInputStream(), res.getOutputStream(), -1); // RFC9110#9.3.8 - client must not send content (but we echo it anyway)
     }
+
+
 }

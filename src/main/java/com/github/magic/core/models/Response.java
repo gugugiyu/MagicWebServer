@@ -8,6 +8,7 @@ import com.github.magic.core.encoder.Encoder;
 import com.github.magic.core.encoder.EncoderFactory;
 import com.github.magic.core.models.header.Header;
 import com.github.magic.core.models.header.Headers;
+import com.github.magic.core.models.threads.TransactionThread;
 import com.github.magic.core.utils.FileAttributeRetriever;
 import com.github.magic.core.utils.Formatter;
 
@@ -22,34 +23,47 @@ import java.util.Date;
 import java.util.List;
 
 public class Response implements Closeable {
-    //The associated request for this response, also can be used for checking client's compatability
+    //The associated request for this response
     private final Request req;
 
+    //THe output stream that will be used to send the response to client
     private final OutputStream oStream;
+
+    //The header list
     private final Headers headers;
+
     //This flag tells if the underlying connection (socket connection) should be closed after this request-response cycle
     private boolean isClosed;
 
+    //Will be set in case the current response needs to be encoded
     private final Encoder encoder;
 
+    //Tells if the header part has already been sent. You can't resend a sent header
     private boolean isHeaderSent;
 
-    private short status; //Http status code of the response
+    //Http status code of the response, is default to 200 OK unless set different
+    private short status = HttpCode.OK; 
 
-    private int reqCounter; //How many request could be handle left (used for Keep-Alive header)
+    //An array with size of 2, trailer values will be ignored
+    //Tells the maximum request that the current socket connection could handle and 
+    //the time when the host will allow an idle connection to remain open before it is closed
+    private final int[] keepAlive = new int[2]; 
 
-    private boolean discardBody; //Used for HEAD http method
+    //Used for HEAD http method, won't send the body of the response
+    private boolean discardBody; 
 
-    private String hostOrigin = "";
-
+    /**
+     * Tells if the current response cycle is trigger by the SSL handshake. 
+     * <br>
+     * All {@code send()} method has no effect when this isn't set to true.
+     * 
+     * @see TransactionThread#isHandshakeCompleted
+     */
     private boolean isHandshakeCompleted;
-
-    private boolean defaultHeader; //Auto-generated header
 
     public Response(OutputStream oStream) throws IOException {
         this.req = null;
         this.isHeaderSent = false;
-        this.defaultHeader = true;
 
         this.oStream = new ResponseOutputStream(oStream);
         this.headers = new Headers();
@@ -60,32 +74,30 @@ public class Response implements Closeable {
      * Initialize the response, and decides whether compression should be done for this request
      *
      * @param req the request corresponding to this response
-     * @param reqCounter the number of request to handle before closing this connection
+     * @param keepAlive an int array with size of 2, specify the max request per socket connectiona and idle connection timeout duration. Trailing values is ignored
      * @param isHandshakeCompleted used for logger, indicating if the current socket request still from the ssl handshake
      * @throws IOException when an IO exception occur when trying to write back to the output stream
      */
-    public Response(Request req, int reqCounter, boolean isHandshakeCompleted) throws IOException {
+    public Response(Request req, int[] keepAlive, boolean isHandshakeCompleted) throws IOException {
         this.req = req;
         this.headers = new Headers();
         this.encoder = shouldEncode();
         this.oStream = getOutputStreamType();
 
-        //If the handler force this connection to close (in case of time out request), then let it be
-        this.isClosed = isConnectionClosed();
+        // If the handler force this connection to close (in case of time out request), then let it be
+        // Else we check the value from the "Connection" header from the request 
+        this.isClosed = req.getHeaders().find("Connection").equalsIgnoreCase("close");
 
-        this.reqCounter = reqCounter;
+        //Check the keepAlive field for more infos
+        this.keepAlive[0] = keepAlive[0];
+        this.keepAlive[1] = keepAlive[1] / 1000; //Convert s to ms
+
         this.isHandshakeCompleted = isHandshakeCompleted;
-        this.defaultHeader = true;
         this.isHeaderSent = false;
     }
 
     public boolean isHeaderSent() {
         return isHeaderSent;
-    }
-
-    public boolean isConnectionClosed() {
-        String connectionHeader = req.getHeaders().find("Connection");
-        return connectionHeader.isEmpty() || connectionHeader.equalsIgnoreCase("close");
     }
 
     /**
@@ -163,37 +175,47 @@ public class Response implements Closeable {
         return new ResponseOutputStream(out);
     }
 
-    public void send(byte[] text, int length, Date dateModified, String mimeType, short status) {
+
+    /**
+     * The base method of sending back the response. If {@link #isHandshakeCompleted} isn't true, then calling this method has no effect
+     * 
+     * @see #send(String)
+     * @see #send(String, String, short)
+     * @see FileAttributeRetriever#getMimeType()
+     * 
+     * @param byteArr the array of bytes as the response body
+     * @param length the actualy length of the body, passing negative value would be interpreted as using {@code byteArr.length}
+     * @param dateModified the last date the content was modifed. Passing {@code null} would take current day instead
+     * @param mimeType the mimeType of the content
+     * @param status the http status code
+     */
+    public void send(byte[] byteArr, int length, Date dateModified, String mimeType, short status) {
+        //Skip if SSL handshake isn't completed
+        if (!isHandshakeCompleted) return;
+
         this.status = status;
 
-        int realLength = length > 0 ? length : text.length; //Length could be -1, indicating this method to use text.length instead
-
+        int realLength = length > 0 ? length : byteArr.length;
         byte[] content = null;
 
-        // Encode the response. Typically, we should encode this it if the file is too large
-        // or the file type of the current file isn't compressed by nature
-
         try{
+            // Encode the response. Typically, we should encode this it if the file is too large
+            // or the file type of the current file isn't compressed by nature
             if (encoder != null && length > Config.COMPRESS_THRESHOLD) {
-                //Readjust the length
-                content = encoder.encode(text, realLength);
-            }
-
-            if (content == null){
-                content = new byte[realLength];
-                System.arraycopy(text, 0, content, 0, realLength);
+                content = encoder.encode(byteArr, realLength);
             }
 
             if (!isHeaderSent){
-                prepareHeader(dateModified, content.length, mimeType);
+                prepareHeader(dateModified, realLength, mimeType);
                 sendHeaders();
                 isHeaderSent = true;
             }
 
             if (!discardBody)
-                oStream.write(content, 0, content.length);
+                oStream.write(content == null ? byteArr : content, 0, realLength);
 
         } catch (IOException e){
+            e.printStackTrace();
             if (Config.SHOW_ERROR) System.err.println("[-] Failed to serve: " + (req == null ? "[Unable to get req path]" : req.getPath().getPath()));
             return;
         }
@@ -206,16 +228,32 @@ public class Response implements Closeable {
                     semanticPath,
                     status,
                     HttpDes.statuses[status],
-                    Formatter.getFormatedLength(content.length)
+                    Formatter.getFormatedLength(realLength)
             );
         }
     }
 
+    /**
+     * Performs a redirect
+     * 
+     * @param url the url to be redirected to
+     * @throws IOException when given url is invalid
+     */
     public void redirect(String url) throws IOException {
         redirect(url, true);
     }
 
-    /* Borrowed from jhttp */
+    
+    /**
+     * Borrowed from jhttp: <br>
+     * Perform a redirect
+     * 
+     * @see #redirect(String)
+     *
+     * @param url the url to be redirected to
+     * @param permanent tells if this redirect if pernament
+     * @throws IOException when given url is invalid
+     */
     public void redirect(String url, boolean permanent) throws IOException {
         try {
             url = new URI(url).toASCIIString();
@@ -233,10 +271,12 @@ public class Response implements Closeable {
     }
 
     /**
-     * Send back the response with just the text and any custom HTTP status in the HTTPCode range (0 <= code <= 600)
+     * Send back the response with just the text and any custom HTTP status
+     * 
+     * @see #send(byte[], int, Date, String, short)
      *
      * @param text The text to be sent (Leave blank or empty equals discarding body)
-     * @param status The status to be returned
+     * @param status The http code
      */
     public void send(String text, String mimeType, short status){
         if (text.isEmpty() || text.isBlank())
@@ -246,9 +286,10 @@ public class Response implements Closeable {
     }
 
     /**
-     * Send back the response with just any string of text, the code will default to be 200 OK
-     *
-     * @param text The text to be sent
+     * Send back the response with just any string of text
+     * 
+     * @see #send(String, String, short)
+     * @param text The text to be sent (Leave blank or empty equals discarding body)
      */
     public void send(String text){
         send(text.trim(), "text/plain", HttpCode.OK);
@@ -257,11 +298,13 @@ public class Response implements Closeable {
     /**
      * Send back the response, but overwrite the MIME-type of the content to be "application/json" instead
      *
-     * @param text The text to be sent
+     * @see #send(String, String, short)
+     * 
+     * @param text The text to be sent (Leave blank or empty equals discarding body)
      * @param status The status to be returned
      */
     public void json(String text, short status){
-        send(text.trim().getBytes(), -1, null, "application/json", status);
+        send(text.trim(), "application/json", status);
     }
 
     /**
@@ -291,12 +334,26 @@ public class Response implements Closeable {
     }
 
 
-    //Auto generate the error header and body
+    /**
+     * Even a more concise way to send back error code to user, uses {@link HttpDes#statuses} description list as for the body message
+     * 
+     * @see #sendError(short, String)
+     * 
+     * @param status the http status code
+     */
     public void sendError(short status){
         //The message will be displayed to the client side
         sendError(status, HttpDes.statuses[status]);
     }
 
+    /**
+     * Send back error to user with the status code and a custom message for the body message
+     * 
+     * @see #send(byte[], int, Date, String, short)
+     * 
+     * @param status the http status code
+     * @param errorText the custom error message
+     */
     public void sendError(short status, String errorText){
         //TODO need more fault-tolerance error here
         if (status != HttpCode.NOT_FOUND)
@@ -319,10 +376,6 @@ public class Response implements Closeable {
                 : null
         ); //Content-Encoding is an exception, it must be set for every requests
 
-        if (!defaultHeader) {
-            return;
-        }
-
         if (!discardBody){
             //Set the common serving header
             //If error response, no need to set "Last-Modified"
@@ -337,14 +390,13 @@ public class Response implements Closeable {
         }
 
         //Set the "dangerous" (not in the safe list) headers
-        setHeader("Host", hostOrigin);
         setHeader("Server", "MagicWebServer/1.2");
         setHeader("Date", Formatter.convertTime(null));
         setHeader("Connection", isClosed ? "close" : "keep-alive");
         setHeader("Accept-Ranges", "bytes");
 
         if (!isClosed)
-            setHeader("Keep-Alive", "timeout=" + (Config.THREAD_REQUEST_READ_TIMEOUT_DURATION / 1000) + ", max=" + reqCounter);
+            setHeader("Keep-Alive", "timeout=" + keepAlive[1] + ", max=" + keepAlive[0]); //TODO hardcoded
 
         //TODO after done on the cache part, make sure to add Cache-Control, Pragma and Expires (in case of backward compatibility) to here
         //as it's in the safe list
@@ -363,14 +415,26 @@ public class Response implements Closeable {
         }
     }
 
+    /**
+     * Send the response line independently
+     * 
+     * @see #sendHeaders()
+     * 
+     * @throws IOException i/o error when sending
+     */
     private void sendResponseLine() throws IOException {
         //Compose and write the response line
-        String responseLine = "HTTP/1.1 " + status + " " + HttpDes.statuses[status];
+        String responseLine = "HTTP/" + req.getVersion() + " " + status + " " + HttpDes.statuses[status];
 
         oStream.write(responseLine.getBytes(StandardCharsets.UTF_8));
         oStream.write(Misc.CRLF);
     }
 
+    /**
+     * Send BOTH the {@link #sendResponseLine()} and the headers of the current response
+     * 
+     * @throws IOException i/o error when sending
+     */
     private void sendHeaders() throws IOException {
         sendResponseLine();
 
@@ -378,6 +442,15 @@ public class Response implements Closeable {
         headers.write(oStream);
     }
 
+    /**
+     * Basically the send method, but with {@code Content-Disposition} header set
+     * 
+     * @see #send(byte[], int, Date, String, short)
+     * 
+     * @param path The path of the file to be downloaded
+     * @param fileName The name of the file
+     * @throws IOException i/o error when sending
+     */
     public void download(String path, String fileName) throws IOException{
         if (fileName.isEmpty() || fileName.isBlank())
             return;
@@ -396,44 +469,60 @@ public class Response implements Closeable {
 
         //Sent as attachment
         setHeader("Content-disposition", "attachment; filename=" + fileName);
-        sendFile(new FileAttributeRetriever(new File(realPath)), path);
+        sendFile(realPath);
     }
 
-    public void sendFile(FileAttributeRetriever dir, String rawPath) throws IOException {
-        if (dir.file().isDirectory()) {
+    /**
+     * Send back a static file from the {@link Config#STATIC_DIR} directory. Generate index page for directory path
+     * 
+     * @param path The path to the static file
+     * @throws IOException I/O Exception may occur when perform writing to the output stream
+     */
+    public void sendFile(String path) throws IOException {
+        if (path.charAt(0) == '.')
+            path = path.substring(1);
+    
+        File file = new File(Config.STATIC_DIR + path);
+        
+        if (file.isDirectory()) {
             //Redirect URL for directories requests that don't start with "/"
-            if (!rawPath.endsWith("/")) {
-                redirect(rawPath + "/", true);
+            if (!path.endsWith("/")) {
+                redirect(path + "/", true);
             } else {
                 //If the path points to the directory, 200 OK
-                serveDirectory(dir, rawPath);
+                serveDirectory(file);
             }
-        } else if (!dir.file().exists()
-                || dir.file().isHidden()
-                || dir.file().getName().startsWith(".")) {
+        } else if (!file.exists()
+                || file.isHidden()
+                || file.getName().startsWith(".")) {
 
             //Not Found
             sendError(HttpCode.NOT_FOUND);
-        } else if (!dir.file().canRead()) {
+        } else if (!file.canRead()) {
 
             //Can't read the file
             //403 Forbidden
             sendError(HttpCode.FORBIDDEN);
         } else {
             //200 OK
-            readAndSendFile(dir);
+            readAndSendFile(file);
         }
     }
 
     /**
-     * Se
+     * Read and call the {@link #send(byte[], int, Date, String, short)} method to send the file. This method support 206 Partial Content type of response
+     * when the "Range" header is found
+     * 
+     * @see #readWithRangeHeader(String, FileInputStream, byte[], int)
+     * @see #send(byte[], int, Date, String, short)
      *
      * @param dir The base directory of the file
-     * @throws IOException
+     * @throws IOException i/o error when sending
      */
-    private void readAndSendFile(FileAttributeRetriever dir) throws IOException {
-        FileInputStream iStream = new FileInputStream(dir.file());
-        long fileLength = dir.file().length();
+    private void readAndSendFile(File file) throws IOException {
+        FileInputStream iStream = new FileInputStream(file);
+        long fileLength = file.length();
+        String rangeHeader = req.getHeaders().find("Range");
         byte[] arr;
         int[] byteRead;
 
@@ -475,7 +564,14 @@ public class Response implements Closeable {
         }*/
 
         arr = new byte[Config.BODY_BUFFER_SIZE];
-        byteRead = readWithRangeHeader(iStream, arr, Config.BODY_BUFFER_SIZE);
+
+        byteRead = readWithRangeHeader(
+            rangeHeader, 
+            iStream, 
+            arr, 
+            Config.BODY_BUFFER_SIZE
+            );
+
         short resCode = HttpCode.OK;
 
         if (byteRead[0] == -2){
@@ -484,11 +580,11 @@ public class Response implements Closeable {
             return;
         }
 
-        if (fileLength > byteRead[0] + byteRead[1]){
+        if (byteRead[0] + byteRead[1] <= fileLength && !rangeHeader.isEmpty()){
             //Read partially, response with 216 Partial Content
             resCode = HttpCode.PARTIAL_CONTENT;
 
-            int endByte = byteRead[0] + byteRead[1] > fileLength
+            int endByte = byteRead[0] + byteRead[1] >= fileLength
                     ? (int) fileLength - 1
                     : byteRead[0] + byteRead[1];
 
@@ -499,7 +595,7 @@ public class Response implements Closeable {
             setHeader("Content-Range","bytes " + byteRead[0] + "-" + endByte + "/" + fileLength);
         }
 
-        send(arr, byteRead[1], new Date(dir.file().lastModified()), dir.getMimeType(), resCode);
+        send(arr, byteRead[1], new Date(file.lastModified()), FileAttributeRetriever.getMimeType(file), resCode);
     }
 
     /**
@@ -508,18 +604,16 @@ public class Response implements Closeable {
      *
      * @return the {@code [offset,length]} of how much bytes read, or {@code [0, -1]} if read none and {@code [-2, 0]} if invalid range
      */
-    private int[] readWithRangeHeader(FileInputStream iStream, byte[] arr, int maxLength) throws IOException {
+    private int[] readWithRangeHeader(String rangeHeader, FileInputStream iStream, byte[] arr, int maxLength) throws IOException {
         //TODO support multiple ranges request, currently one range supported only
         //https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
         int offset       = 0;
         int separatorIdx = 0;
         int len          = maxLength;
 
-        String header = req.getHeaders().find("Range");
-
-        if (!header.isEmpty()){
+        if (!rangeHeader.isEmpty()){
             //TODO modify the logic here
-            separatorIdx = header.lastIndexOf("=");
+            separatorIdx = rangeHeader.lastIndexOf("=");
 
             //Usually for single range request, the index would typically look like this
             //Index        0         1
@@ -527,7 +621,7 @@ public class Response implements Closeable {
 
             if (separatorIdx == -1) return new int[]{-2, 0};
 
-            String[] range = header.substring(separatorIdx + 1).split("-");
+            String[] range = rangeHeader.substring(separatorIdx + 1).split("-");
 
             if (!range[0].isEmpty())                     offset = Integer.parseInt(range[0]);
             if (range.length > 1 && !range[1].isEmpty()) len    = Integer.parseInt(range[1]);
@@ -537,28 +631,35 @@ public class Response implements Closeable {
         return new int[]{offset, iStream.read(arr, 0, len)};
     }
 
-    private void serveDirectory(FileAttributeRetriever dir, String rawPath) {
+    /**
+     * Returns the index page of all the files within that directory. Currently using inline html template
+     * 
+     * @see #sendFile(String)
+     * 
+     * @param file the directory
+     */
+    private void serveDirectory(File file) {
         //Mimic behavior of Apache Web server
 
         StringBuilder template = new StringBuilder("<!DOCTYPE html>\n" +
                 "<html>\n" +
                 " <head>\n" +
-                "  <title>Index of " + rawPath + "</title>\n" +
+                "  <title>Index of " + file.getName() + "</title>\n" +
                 " </head>\n" +
                 " <body>\n" +
-                "<h1>Index of " + rawPath + "</h1>\n" +
+                "<h1>Index of " + file.getName() + "</h1>\n" +
                 "<ul>");
 
         //Retrieve file name from a directory
-        File[] files = dir.file().listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
+        File[] files = file.listFiles(pathname -> !pathname.isHidden() && pathname.canRead());
 
         if (files == null) {
             template.append("<h3> There's no file in this directory </h3>");
         } else {
-            for (File file : files) {
+            for (File item : files) {
                 template.append("<li>").append(buildAnchorLink(
-                        rawPath + file.getName(),
-                        file.isDirectory() ? file.getName() + "/" : file.getName()
+                    item.getName(),
+                    item.isDirectory() ? item.getName() + "/" : item.getName()
                 )).append("</li>");
             }
         }
@@ -570,17 +671,17 @@ public class Response implements Closeable {
     }
 
     private String processSemanticPath(){
-        if (status == HttpCode.REQUEST_TIMEOUT || status == HttpCode.GATEWAY_TIMEOUT)
+        if (req == null){
+            if (status == HttpCode.REQUEST_TIMEOUT || status == HttpCode.GATEWAY_TIMEOUT)
             return "[Timeout]";
 
-        if (status == HttpCode.INTERNAL_SERVER_ERROR)
-            return "[Server error]";
+            if (status == HttpCode.INTERNAL_SERVER_ERROR)
+                return "[Server error]";
 
-        if (req == null){
-            if (!isHandshakeCompleted)
-                return "[SSL handshake]";
-            else
-                return "[Path unknown]";
+            if (status == HttpCode.BAD_REQUEST)
+                return "[Bad request]";
+
+            return "[Path unknown]";
         }
 
         return req.getMethod() + " " + req.getPath().getPath();
@@ -605,34 +706,56 @@ public class Response implements Closeable {
         }
     }
 
+        /**
+     * Sets the status.
+     *
+     * @param status the new status to set
+     */
     public void setStatus(short status) {
         this.status = status;
     }
 
+    /**
+     * Gets the headers.
+     *
+     * @return the headers
+     */
     public Headers getHeaders() {
         return headers;
     }
 
+    /**
+     * Sets whether to discard the body.
+     *
+     * @param discardBody true to discard the body, false otherwise
+     */
     public void setDiscardBody(boolean discardBody) {
         this.discardBody = discardBody;
     }
 
-    public void setHostOrigin(String hostOrigin) {
-        this.hostOrigin = hostOrigin;
-    }
-
+    /**
+     * Gets the output stream.
+     *
+     * @return the output stream
+     */
     public OutputStream getOutputStream() {
         return oStream;
     }
 
-    public void setDefaultHeader(boolean defaultHeader) {
-        this.defaultHeader = defaultHeader;
-    }
-
+    /**
+     * Checks if the body should be discarded.
+     *
+     * @return true if the body should be discarded, false otherwise
+     */
     public boolean isDiscardBody() {
         return discardBody;
     }
 
+    /**
+     * Sets whether the header has been sent.
+     *
+     * @param headerSent true if the header has been sent, false otherwise
+     */
     public void setHeaderSent(boolean headerSent) {
         isHeaderSent = headerSent;
     }

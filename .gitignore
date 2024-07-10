@@ -35,8 +35,8 @@ bin/
 build/
 
 ### SSL setting ###
-cert_data/*
-data/*
+src/main/resources/cert_data/*
+src/main/resources/data/*
 
 !cert_data/.gitkeep
 !data/.gitkeep

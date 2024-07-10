@@ -1,6 +1,7 @@
 package core.models.server;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.consts.HttpCode;
 import com.github.magic.core.middleware.Cors;
 import com.github.magic.core.middleware.Logger;
@@ -243,7 +244,7 @@ public class GETRequestTest {
             System.out.println("sleep lambda trigger!");
             //Mocking up a test timeout
             try {
-                Thread.sleep(Config.THREAD_TIMEOUT_DURATION + 1000);
+                Thread.sleep(new ServerConfig().getThreadTimeoutDuration() + 1000);
             } catch (InterruptedException ignored) {
             }
         });

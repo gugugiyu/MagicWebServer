@@ -1,6 +1,7 @@
 package com.github.magic.ssl.models;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.models.routing_tries.URITries;
 import com.github.magic.core.models.server.Server;
 import com.github.magic.ssl.validator.SSLValidator;
@@ -11,20 +12,20 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class SSLServer extends Server {
-    public SSLServer(int port, URITries routingTree) {
-        super(port, routingTree);
+    public SSLServer(int port, URITries routingTree, ServerConfig serverConfig) {
+        super(port, routingTree, serverConfig);
     }
 
     public SSLServer(URITries routingTree) {
-        this(443, routingTree);
+        this(443, routingTree, new ServerConfig());
     }
 
     public SSLServer(int port) {
-        this(port, new URITries());
+        this(port, new URITries(), new ServerConfig());
     }
 
     public SSLServer() {
-        this(443, new URITries());
+        this(443, new URITries(), new ServerConfig());
     }
 
     public void setKeyStore(String path) {

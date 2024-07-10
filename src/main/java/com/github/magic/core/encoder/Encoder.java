@@ -11,9 +11,10 @@ public abstract class Encoder {
      * used should be defined by the implementing class. This method is abstract and
      * must be implemented by subclasses to provide the specific encoding logic.</p>
      *
-     * @param text the byte array to be encoded
-     * @return the encoded byte array
+     * @param text The byte array to be encoded
+     * @param length The length of the array
+     * @return The encoded byte array
      * @throws IOException if an I/O error occurs during encoding
      */
-    public abstract byte[] encode(byte[] text, int length) throws IOException;
+    public abstract byte[] encode(byte[] byteArr, int length) throws IOException;
 }

@@ -1,6 +1,7 @@
 package core.models.server;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.middleware.Cors;
 import com.github.magic.core.middleware.Logger;
 import com.github.magic.core.middleware.Middleware;
@@ -31,11 +32,13 @@ public class ConnectionTest {
     final static int SERVER_DEFAULT_TIMEOUT = 100;
 
     private static HttpURLConnection setupConnection(String urlString) throws IOException, URISyntaxException {
+        ServerConfig serverConfig= new ServerConfig(); //using default server config
+
         URL url = new URI(urlString).toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setConnectTimeout(5000); // 5 seconds timeout
-        connection.setReadTimeout((Config.THREAD_TIMEOUT_DURATION + 2) * 1000); // Timeout for worker thread execution set from server with 2 extra seconds
+        connection.setReadTimeout((serverConfig.getThreadRequestReadTimeoutDuration() + 2) * 1000); // Timeout for worker thread execution set from server with 2 extra seconds
 
         return connection;
     }

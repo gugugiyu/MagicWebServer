@@ -94,22 +94,17 @@ public class Node implements Cloneable{
                 node.children.addLast(newNode);
                 node = node.children.getLast();
             } else {
-                if (tokens[i].startsWith(":"))
+                if (tokens[i].startsWith(":")){
                     tempNode = overrideRouteParam(node, tokens[i]);
-
-                if (tempNode == null) {
-                    node.children.addFirst(newNode);
-                    node = node.children.getFirst();
-                } else {
-                    if (tempNode.token == null) {
-                        //Shouldn't override
-                        break;
+                    
+                    if (tempNode != null){
+                        node = tempNode;
+                        continue;
                     }
-
-                    tempNode.middlewares = middlewares;
-                    tempNode.nodeHandler = nodeHandler;
-                    tempNode.token = tokens[i];
                 }
+
+                node.children.addFirst(newNode);
+                node = node.children.getFirst();
             }
         }
 
@@ -118,48 +113,48 @@ public class Node implements Cloneable{
     }
 
     /**
-     * Override the route parameters at any token level. The {@code checkRoute} will only override the current route param in any of these conditions:
+     * Override the route parameters at any token level. The {@code afterRoute} will only override the current route param in any of these conditions:
      * <ul>
-     *     <li>{@code checkRoute} has different name than the current route param</li>
-     *     <li>{@code checkRoute} has same name, but different</li>
+     *     <li>{@code afterRoute} has different name than the current route param</li>
+     *     <li>{@code afterRoute} has same name, but different regex</li>
      * </ul>
      *
      * @param node       The current node in which the next token to be inserted
-     * @param checkRoute The route to be checked (should be a route parameter, regex is optional)
-     * @return null if no route param matched, {@link Node} instance with token of {@code null} when override failed, and the target node to be overridden if success
+     * @param afterRoute The route to be checked (should be a route parameter, regex is optional)
+     * @return null if no route param matched, or the target node to be overridden if success
      */
-    private Node overrideRouteParam(Node node, String checkRoute) {
-        int regexIdx;
-        boolean sameNameButDifferentRegex = checkRoute.contains("(");
-        String compareStr;
+    private Node overrideRouteParam(Node node, String afterRoute) {
+        int beforeRegexIdx, afterRegexIdx = afterRoute.indexOf("(");
+        String beforeRoute = ""; 
+        String beforeRouteName = beforeRoute, afterRouteName = afterRoute;
+        String beforeRouteRegexPart = "", afterRouteRegexPart = "";
 
         for (Node child : node.children) {
-            if (!child.token.startsWith(":")) {
-                continue;
+            beforeRoute = child.token;
+
+            //Ignore routes that aren't route parameters or string literal ":"
+            if (!beforeRoute.startsWith(":") || beforeRoute.length() < 2) continue;
+            
+            beforeRegexIdx = beforeRoute.indexOf("(");
+
+            //Get name for both
+            if (beforeRegexIdx != -1){
+                beforeRouteName = beforeRoute.substring(0, beforeRegexIdx);
+                beforeRouteRegexPart = beforeRoute.substring(beforeRegexIdx);
             }
 
-            if (child.token.length() < 2) {
-                //Treated as path literal
-                continue;
+            if (afterRegexIdx != -1){
+                afterRouteName = afterRoute.substring(0, afterRegexIdx);
+                afterRouteRegexPart = afterRoute.substring(afterRegexIdx + 1);
             }
 
-            regexIdx = child.token.indexOf("(");
+            if (!beforeRouteName.equals(afterRouteName) 
+                || (!afterRouteRegexPart.equals(beforeRouteRegexPart))) 
+                
+                if (!afterRouteRegexPart.isEmpty())
+                    child.token = afterRoute; 
 
-            compareStr = (regexIdx != -1)
-                    ? child.token.substring(0, regexIdx)
-                    : child.token;
-
-            if (sameNameButDifferentRegex)
-                sameNameButDifferentRegex = compareStr
-                        .substring(regexIdx + 1)
-                        .equals(checkRoute.substring(checkRoute.indexOf("(") + 1));
-
-            if (compareStr.equals(checkRoute) && !sameNameButDifferentRegex)
-                return new Node(HttpMethod.GET, null, null);
-
-            if (!compareStr.equals(checkRoute) || sameNameButDifferentRegex) {
                 return child;
-            }
         }
 
         //There's no route param existed yet, just assign it as normal
@@ -272,7 +267,7 @@ public class Node implements Cloneable{
                 isMatched = false;
 
                 for (Node child : returnNode.children) {
-                    isRegexMatched = isChildTokenRegex(compareStr, child.token) != null;
+                    isRegexMatched = isTokenRegex(compareStr, child.token) != null;
 
                     if (!child.getHttpMethod().equals(getHttpMethod()))
                         continue;
@@ -281,7 +276,7 @@ public class Node implements Cloneable{
                         //Regexes also have asterisk, but they're interpreted differently
                         //So we'll have make sure which one is matching here
 
-                        isMatched = handleWildcard(iterator, tokens, child.token, compareStr);
+                        isMatched = handleWildcard(iterator, tokens, child.token);
                     } else if (child.token.startsWith(":") && child.token.length() > 1) {
                         //Route parameter without name will be treated as literal string ":"
                         //Skip the colon ":"
@@ -321,20 +316,42 @@ public class Node implements Cloneable{
             return isFound ? returnNode : null;
         }
 
-        private boolean handleWildcard(int iterator, String[] tokens, String wildcardToken, String splitToken) {
+        /**
+         * Handle both the asterisk used within the regexes and the wilcard symbol itself. When the use case of wildcard symbol is detected,
+         * the attribute {@code wilcardPath} will be inserted with the value of the remaining path from the matched position.
+         * 
+         * <br>
+         * <br>
+         * 
+         * <b>Example:</b>
+         * Register path: /test/* 
+         * <br>
+         * Actualy path: "/test/value1/123" 
+         * <br>
+         * wilcardPath: value1/123 
+         * <br>
+         * 
+         * @see #findTraverse(Node, String[])
+         * 
+         * @param iterator the index of the current element from {@code tokens} list
+         * @param tokens the list of tokens having delimiter of "/"
+         * @param wildcardToken the wildcard token regisred in the tree
+         * @return true if either regex case or the wildcard symbol matched. Otherwise returns false
+         */
+        private boolean handleWildcard(int iterator, String[] tokens, String wildcardToken) {
             //Wildcard handling
             int wildCardIdx = wildcardToken.indexOf("*");
 
             //Check if is there any affixes
             String prefix = wildcardToken.substring(0, wildCardIdx);
 
-            //Suffix can be out of bound
             String suffix = "";
-
+            
+            //Suffix can be out of bound
             if (wildCardIdx + 1 <= wildcardToken.length())
                 suffix = wildcardToken.substring(wildCardIdx + 1);
 
-            if (splitToken.startsWith(prefix) && splitToken.endsWith(suffix)){
+            if (tokens[iterator].startsWith(prefix) && tokens[iterator].endsWith(suffix)){
                 String[] remainingTokens = Arrays.copyOfRange(tokens, iterator, tokens.length);
                 String joinedEndpoint = String.join("/", remainingTokens);
 
@@ -346,19 +363,30 @@ public class Node implements Cloneable{
             return false;
         }
 
-        private String isChildTokenRegex(String splitToken, String childToken) {
+        /**
+         * Try to get the regex pattern from the {@code regexToken} then compiles it
+         * 
+         * @see #findTraverse(Node, String[])
+         * 
+         * @param compareStr the string to be compiled
+         * @param regexToken the string with (potential) regex
+         * @return a string matching the regex from {@code compareStr} if found, else return null
+         */
+        private String isTokenRegex(String compareStr , String regexToken) {
             RegexMatcher regexMatcher = new RegexMatcher();
 
             String retGroup;
 
-            if (childToken.startsWith(":")) {
+            if (regexToken.startsWith(":")) {
                 //Regex can also be used in route parameter, and is encapsulated between parentheses (())
-                //If the route was syntactically correct, the closing parenthesis should be at the last index
-                childToken = childToken.substring(Math.max(childToken.indexOf("(") + 1, 0), childToken.length() - 1);
+                regexToken = regexToken.substring(
+                    Math.max(regexToken.indexOf("(") + 1, 0), 
+                    regexToken.length() - 1
+                    );
             }
 
             try {
-                retGroup = regexMatcher.check(splitToken, childToken);
+                retGroup = regexMatcher.check(compareStr, regexToken);
             } catch (PatternSyntaxException e) {
                 return null; //Invalid regex, or regex isn't provided
             }
