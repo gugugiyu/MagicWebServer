@@ -1,5 +1,6 @@
-![current build status](https://github.com/gugugiyu/MagicWebServer/actions/workflows/maven-push.yml/badge.svg)
-
+![Deploy status](https://github.com/gugugiyu/MagicWebServer/actions/workflows/dev-branch-test.yml/badge.svg)
+![Test status](https://github.com/gugugiyu/MagicWebServer/actions/workflows/main-branch-deploy-to-github-package.yml/badge.svg)
+![stable version](https://img.shields.io/badge/version-1.2.0-blue)
 
 # MagicWebServer
 A hobby web server written in Java
