@@ -11,20 +11,49 @@ import test_utils.TestUtils;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static com.github.magic.core.config.Config.STATIC_DIR;
 
 public class EncodingTest extends HttpTest {
-    @Test(timeout = 5000)
-    public void request_media_encoding_test() {
+    @Test
+    public void request_media_deflate_encoding_test() {
         try {
             Headers headers = new Headers();
             headers.add(new Header("Accept-Encoding", "deflate"));
 
-            HttpURLConnection connection = TestUtils.getResponse(new URL(BASE_URL + "/image.png"), HttpMethod.GET);
+            HttpURLConnection connection = TestUtils.getResponse(new URL(BASE_URL + "image.png"), HttpMethod.GET, headers);
             Assert.assertEquals("Status code should be 200", HttpCode.OK, connection.getResponseCode());
 
             String encoding = connection.getHeaderField("Content-Encoding");
             Assert.assertEquals("Content-Encoding should be deflate", "deflate", encoding);
 
+            long actualFileLength = Files.size(Path.of(STATIC_DIR + "/img.png"));
+            long compressedFileLength = Long.parseLong(connection.getHeaderField("Content-Length"));
+
+            Assert.assertTrue("Compress file should be smaller than actual file", compressedFileLength < actualFileLength);
+        } catch (IOException e) {
+            Assert.fail("Exception raised: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void request_media_gzip_encoding_test() {
+        try {
+            Headers headers = new Headers();
+            headers.add(new Header("Accept-Encoding", "gzip"));
+
+            HttpURLConnection connection = TestUtils.getResponse(new URL(BASE_URL + "image.png"), HttpMethod.GET, headers);
+            Assert.assertEquals("Status code should be 200", HttpCode.OK, connection.getResponseCode());
+
+            String encoding = connection.getHeaderField("Content-Encoding");
+            Assert.assertEquals("Content-Encoding should be gzip", "gzip", encoding);
+
+            long actualFileLength = Files.size(Path.of(STATIC_DIR + "/img.png"));
+            long compressedFileLength = Long.parseLong(connection.getHeaderField("Content-Length"));
+
+            Assert.assertTrue("Compress file should be smaller than actual file", compressedFileLength < actualFileLength);
         } catch (IOException e) {
             Assert.fail("Exception raised: " + e.getMessage());
         }

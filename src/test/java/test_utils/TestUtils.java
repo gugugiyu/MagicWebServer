@@ -2,6 +2,8 @@ package test_utils;
 
 import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.consts.HttpMethod;
+import com.github.magic.core.models.header.Header;
+import com.github.magic.core.models.header.Headers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,10 +28,11 @@ public class TestUtils {
      *
      * @param url The url to be connected.
      * @param method The http method to be used for this request, default is GET is pass {@code null}
+     * @param headers the header list to be sent
      * @return an {@link HttpURLConnection} instance of the current connection, or {@code null} if the current URL isn't valid
      * @throws IOException exception when trying to open connection to the url
      */
-    public static HttpURLConnection getResponse(URL url, HttpMethod method) throws IOException {
+    public static HttpURLConnection getResponse(final URL url, HttpMethod method, final Headers headers) throws IOException {
         if (url == null) return null;
 
         if (method == null)
@@ -42,9 +45,19 @@ public class TestUtils {
         con.setConnectTimeout(CONNECT_TIMEOUT_DURATION);
         con.setReadTimeout(READ_TIMETOUT_DURATION);
 
+        if (headers != null){
+            for (Header header : headers){
+                con.setRequestProperty(header.getKey(), header.getValue());
+            }
+        }
+
         con.connect();
 
         return con;
+    }
+
+    public static HttpURLConnection getResponse(final URL url, HttpMethod method) throws IOException {
+        return getResponse(url, method, null);
     }
 
     /**

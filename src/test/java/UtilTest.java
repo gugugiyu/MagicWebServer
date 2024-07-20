@@ -1,6 +1,5 @@
 import com.github.magic.core.consts.HttpMethod;
 import core.models.server.HttpTest;
-import org.junit.Assert;
 import org.junit.Test;
 import test_utils.TestUtils;
 
@@ -77,13 +76,13 @@ public class UtilTest extends HttpTest {
             File tempFile = File.createTempFile("testData", ".json");
             Files.writeString(tempFile.toPath(), mockString);
 
-            Assert.assertTrue(TestUtils.compareFile(mockString, tempFile.toPath()));
-            Assert.assertFalse(TestUtils.compareFile("test", tempFile.toPath()));
+            assertTrue(TestUtils.compareFile(mockString, tempFile.toPath()));
+            assertFalse(TestUtils.compareFile("test", tempFile.toPath()));
 
-            Assert.assertTrue(TestUtils.compareFile(null, tempFile.toPath()));
-            Assert.assertFalse(TestUtils.compareFile(mockString, null));
+            assertTrue(TestUtils.compareFile(null, tempFile.toPath()));
+            assertFalse(TestUtils.compareFile(mockString, null));
         } catch (IOException e){
-            Assert.fail("Can't create temp file for testing");
+            fail("Can't create temp file for testing");
         }
     }
 }

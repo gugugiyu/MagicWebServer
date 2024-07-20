@@ -15,13 +15,16 @@ import static core.models.server.HttpTest.BASE_URL;
 
 public class BaseCaseTest extends HttpTest {
     @Test
-    public void request_root_path() {
+    public void should_have_no_content_request() {
         try {
             HttpURLConnection connection = TestUtils.getResponse(new URL(BASE_URL), HttpMethod.HEAD);
-            String responseBody = TestUtils.readResponseBody(connection.getContent());
+
+            String contentType = connection.getContentType();
+            int contentLength = connection.getContentLength();
 
             Assert.assertEquals("Status code should be 200", HttpCode.OK, connection.getResponseCode());
-            Assert.assertEquals("There should be no content", "", responseBody);
+            Assert.assertTrue("There should be no content length", contentLength < 0);
+            Assert.assertNull("There should be no content type", contentType);
         } catch (IOException e) {
             Assert.fail("Exception raised: " + e);
         }

@@ -6,10 +6,19 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @FixMethodOrder()
 @RunWith(JUnit4.class)
 public class HttpTest{
-    final static int HTTP_PORT = 3000;
+    public final static int HTTP_PORT = 3000;
+    public final static Path PROJECT_ROOT;
+
+    static{
+        Path currentPath = Paths.get("").toAbsolutePath();
+        PROJECT_ROOT = currentPath.getParent().getParent().getParent().getParent();
+    }
 
     private static Thread serverThread;
     private static boolean isServerStarted = false; //This is to prevent the server being boot up multiple times
@@ -88,7 +97,7 @@ public class HttpTest{
         });
 
         //For testing encoding
-        app.get("/image.png", new StaticFileHandler("img.png"));
+        app.get("/image.png", new StaticFileHandler("./img.png"));
 
         serverThread = new Thread(app);
         serverThread.setDaemon(true);
