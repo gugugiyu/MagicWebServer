@@ -44,14 +44,18 @@ verb-based approach when assigning the handler for each path
 ### Simple server
 
 ```java
-//Initialize the server      
-Server app = new Server();
+public class Main(){
+    public static void main(String[] args){
+        //Initialize the server      
+        Server app = new Server();
 
-//Serve "root" text at the root path
-app.get("/", (req, res) -> res.send("root"));
-
-//Listen on port 80
-app.listen();
+        //Serve "root" text at the root path
+        app.get("/", (req, res) -> res.send("root"));
+        
+        //Listen on port 80
+        app.listen();
+    }
+}
 ```
 
 ### Learn more from the examples
