@@ -104,6 +104,11 @@ public class Request {
             c = iStream.read();
         }
 
+        //Maximum length for the URL is set based on this article
+        //https://saturncloud.io/blog/what-is-the-maximum-length-of-a-url-in-different-browsers/
+        if (requestLine.length() >= 2083)
+            throw new IOException("URI too long");
+
         String[] firstLineTokens = requestLine.split(" ");
 
         if (firstLineTokens.length < 3) {

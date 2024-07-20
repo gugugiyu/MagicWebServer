@@ -1,12 +1,11 @@
 package com.github.magic.core.utils;
 
+import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Locale;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
 
 public class Formatter {
     public static String getFormatedLength(int length) {
@@ -34,13 +33,10 @@ public class Formatter {
         if (date == null)
             date = new Date();
 
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(
-                "EEE, dd MMM yyyy HH:mm:ss z", Locale.US
-        );
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        ZonedDateTime timezoneDependentNow = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-
-        return timezoneDependentNow.format(dateFormat);
+        return dateFormat.format(date);
     }
 
     public static String trimLeft(String s, char c) {

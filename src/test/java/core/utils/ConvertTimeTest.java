@@ -22,14 +22,8 @@ public class ConvertTimeTest {
     @Test
     public void test_validTime() {
         Date testTime = new Date(1000); //1 seconds after the epoch
-
-        ZonedDateTime now = ZonedDateTime.now();
-        ZoneOffset offset = now.getOffset();
-
-        int offsetHours = offset.getTotalSeconds() / 3600;
-
         assertEquals(
-                "Thu, 01 Jan 1970 0" + (offsetHours) + ":00:01 " + TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT),
+                "Thu, 01 Jan 1970 00:00:01 UTC",
                 convertTime(testTime));
     }
 
