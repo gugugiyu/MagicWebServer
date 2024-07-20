@@ -52,8 +52,23 @@ public class Node implements Cloneable{
         this.httpMethod = httpMethod;
     }
 
+    public String getToken() {
+        return token;
+    }
 
-    public void register(HttpMethod method, String endpoint, ArrayList<Middleware> middlewares, Handler nodeHandler) {
+    public LinkedList<Node> getChildren() {
+        return children;
+    }
+
+    public Handler getNodeHandler() {
+        return nodeHandler;
+    }
+
+    public List<Middleware> getMiddlewares() {
+        return middlewares;
+    }
+
+    public synchronized void register(HttpMethod method, String endpoint, ArrayList<Middleware> middlewares, Handler nodeHandler) {
         endpoint = trimRequestParam(endpoint);
 
         String[] tokens = endpoint.equals("/") ? new String[]{"/"} : com.github.magic.core.utils.Formatter.replaceEmptyWithRoot(endpoint.split("/", 0));
@@ -113,7 +128,7 @@ public class Node implements Cloneable{
     }
 
     /**
-     * Override the route parameters at any token level. The {@code afterRoute} will only override the current route param in any of these conditions:
+     * Override the route parameters at any token level. The {@code afterRoute} will only override (set the token) the current route param in any of these conditions:
      * <ul>
      *     <li>{@code afterRoute} has different name than the current route param</li>
      *     <li>{@code afterRoute} has same name, but different regex</li>
@@ -121,26 +136,25 @@ public class Node implements Cloneable{
      *
      * @param node       The current node in which the next token to be inserted
      * @param afterRoute The route to be checked (should be a route parameter, regex is optional)
-     * @return null if no route param matched, or the target node to be overridden if success
+     * @return null if no route param to be overwritten, or the target node to be overwritten if success
      */
     private Node overrideRouteParam(Node node, String afterRoute) {
         int beforeRegexIdx, afterRegexIdx = afterRoute.indexOf("(");
-        String beforeRoute = ""; 
-        String beforeRouteName = beforeRoute, afterRouteName = afterRoute;
-        String beforeRouteRegexPart = "", afterRouteRegexPart = "";
+
+        String beforeRouteName = "", afterRouteName = afterRoute;
+        String afterRouteRegexPart = "";
 
         for (Node child : node.children) {
-            beforeRoute = child.token;
-
             //Ignore routes that aren't route parameters or string literal ":"
-            if (!beforeRoute.startsWith(":") || beforeRoute.length() < 2) continue;
+            if (!child.token.startsWith(":") || child.token.length() < 2) continue;
             
-            beforeRegexIdx = beforeRoute.indexOf("(");
+            beforeRegexIdx = child.token.indexOf("(");
 
             //Get name for both
             if (beforeRegexIdx != -1){
-                beforeRouteName = beforeRoute.substring(0, beforeRegexIdx);
-                beforeRouteRegexPart = beforeRoute.substring(beforeRegexIdx);
+                beforeRouteName = child.token.substring(0, beforeRegexIdx);
+            }else{
+                beforeRouteName = child.token;
             }
 
             if (afterRegexIdx != -1){
@@ -148,13 +162,12 @@ public class Node implements Cloneable{
                 afterRouteRegexPart = afterRoute.substring(afterRegexIdx + 1);
             }
 
-            if (!beforeRouteName.equals(afterRouteName) 
-                || (!afterRouteRegexPart.equals(beforeRouteRegexPart))) 
-                
+            if (beforeRouteName.equals(afterRouteName)){
                 if (!afterRouteRegexPart.isEmpty())
-                    child.token = afterRoute; 
+                    child.token = afterRoute;
 
                 return child;
+            }
         }
 
         //There's no route param existed yet, just assign it as normal
@@ -167,13 +180,14 @@ public class Node implements Cloneable{
             return null;
         }
 
+        endpoint = trimRequestParam(endpoint);
         String[] tokens = endpoint.equals("/") ? new String[]{"/"} : com.github.magic.core.utils.Formatter.replaceEmptyWithRoot(endpoint.split("/", 0));
 
-        endpoint = trimRequestParam(endpoint);
 
         TraverseNode tNode = new TraverseNode(method, endpoint, null);
         Node node = tNode.findTraverse(this, tokens);
 
+        //Either not found or unable to traverse to the last token
        if (node == null){
            return new HandlerWithParam(
                    null, new HashMap<>(), null
@@ -312,6 +326,10 @@ public class Node implements Cloneable{
             if (params != null && !wildcardPath.isEmpty())
                 params.put("wildcard", wildcardPath);
 
+            //Only the literal wildcard allows for more sub-routes to be matched with a shorter registered path
+            if (wildcardPath.isEmpty() && depthLayer < tokens.length)
+                return null;
+
             // Return the deepest node reached
             return isFound ? returnNode : null;
         }
@@ -364,7 +382,11 @@ public class Node implements Cloneable{
         }
 
         /**
-         * Try to get the regex pattern from the {@code regexToken} then compiles it
+         * <p>Try to get the regex pattern from the {@code regexToken} then compiles it</p>
+         * <p>Note that the regex behavior was modified so that it no longer handle direct character matching</p>
+         * <b>For example:</b>
+         * <p>Regex: test; Data: This is test data</p>
+         * <p>Regex compile output: null</p>
          * 
          * @see #findTraverse(Node, String[])
          * 
@@ -391,7 +413,7 @@ public class Node implements Cloneable{
                 return null; //Invalid regex, or regex isn't provided
             }
 
-            return retGroup;
+            return compareStr.contains(regexToken) ? null : retGroup;
         }
     }
 

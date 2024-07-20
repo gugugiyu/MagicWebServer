@@ -42,7 +42,7 @@ public final class Config {
     // Encoder config                     //
     ////////////////////////////////////////
 
-    public static final int ENCODER_BUFFER_SIZE = (1 << 11); //2048 bytes
+    public static final int ENCODER_BUFFER_SIZE = (1 << 15); //8192 bytes
 
     //Threshold used to determine whether an uncompressed file should be compressed based on its size
     public static final int COMPRESS_THRESHOLD = (1 << 15); //32768 bytes

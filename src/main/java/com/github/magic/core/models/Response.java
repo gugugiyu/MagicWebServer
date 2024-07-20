@@ -36,7 +36,7 @@ public class Response implements Closeable {
     private boolean isClosed;
 
     //Will be set in case the current response needs to be encoded
-    private final Encoder encoder;
+    private Encoder encoder;
 
     //Tells if the header part has already been sent. You can't resend a sent header
     private boolean isHeaderSent;
@@ -56,18 +56,16 @@ public class Response implements Closeable {
      * Tells if the current response cycle is trigger by the SSL handshake. 
      * <br>
      * All {@code send()} method has no effect when this isn't set to true.
-     * 
-     * @see TransactionThread#isHandshakeCompleted
      */
-    private boolean isHandshakeCompleted;
+    private final boolean isHandshakeCompleted;
 
     public Response(OutputStream oStream) throws IOException {
         this.req = null;
         this.isHeaderSent = false;
+        this.isHandshakeCompleted = true;
 
         this.oStream = new ResponseOutputStream(oStream);
         this.headers = new Headers();
-        this.encoder = shouldEncode();
     }
 
     /**
@@ -81,7 +79,6 @@ public class Response implements Closeable {
     public Response(Request req, int[] keepAlive, boolean isHandshakeCompleted) throws IOException {
         this.req = req;
         this.headers = new Headers();
-        this.encoder = shouldEncode();
         this.oStream = getOutputStreamType();
 
         // If the handler force this connection to close (in case of time out request), then let it be
@@ -108,29 +105,21 @@ public class Response implements Closeable {
      * <li>When the MIME type of the response type isn't already compressed (check out the list from the {@code COMPRESSED_DATE_TYPE } constant)</li>
      * </ul>
      *
+     * @param mimeType The MIME-type of the request
      * @return the encoder to be used from the {@link EncoderFactory}
      * @throws IOException exception when performing compression
      */
-    private Encoder shouldEncode() throws IOException {
+    private Encoder shouldEncode(String mimeType) throws IOException {
         if (req == null || req.getHeaders().find("Accept-Encoding").isEmpty())
             return null;
 
-        //In case this isn't a static file request, we can't possibly determine what file type it is
-        //We should probably encode it
-        String path = req.getPath().getPath();
-
-        //We can check the part after the last "/" to see if there's any "." (which signifies a file extension)
-        int lastSlashIdx = path.lastIndexOf("/");
-
-        if (!path.substring(lastSlashIdx).contains(".")) {
-            return null;
-        }
+        String subType = mimeType.substring(mimeType.lastIndexOf("/") + 1);
 
         //Handles logic for whether we should encode this http response
         //For now, let say that for file types that are already compressed, we won't compress it anymore
         //Lossy or lossless doesn't matter here
         final String[] COMPRESSED_DATA_TYPE = {
-                "png",  "mp3",  "mp4",  "pdf",  "rar", "apk",
+                "mp3",  "mp4",  "pdf",  "rar", "apk",
                 "jpg",  "aac",  "avi",  "docx", "7z",  "mpg",
                 "jpeg", "ogg",  "mkv",  "xlsx", "gz",  "tar.gz",
                 "gif",  "wma",  "mov",  "pptx", "iso",
@@ -138,15 +127,13 @@ public class Response implements Closeable {
         };
 
         for (String string : COMPRESSED_DATA_TYPE) {
-            if (path.endsWith(string)) {
+            if (subType.endsWith(string)) {
                 return null;
             }
         }
 
-        String validEncodingRange = req.getHeaders().find("Accept-Encoding");
-
         //Going through the encoding list (usually separated with the comma delimiter)
-        String[] encodingTypes = validEncodingRange.split(",");
+        String[] encodingTypes = req.getHeaders().find("Accept-Encoding").split(",");
 
         for (String type : encodingTypes) {
             type = type.trim();
@@ -181,7 +168,7 @@ public class Response implements Closeable {
      * 
      * @see #send(String)
      * @see #send(String, String, short)
-     * @see FileAttributeRetriever#getMimeType()
+     * @see FileAttributeRetriever#getMimeType(File) 
      * 
      * @param byteArr the array of bytes as the response body
      * @param length the actualy length of the body, passing negative value would be interpreted as using {@code byteArr.length}
@@ -195,6 +182,12 @@ public class Response implements Closeable {
 
         this.status = status;
 
+        try{
+            this.encoder = shouldEncode(mimeType);
+        } catch (IOException e){
+            this.encoder = null;
+        }
+
         int realLength = length > 0 ? length : byteArr.length;
         byte[] content = null;
 
@@ -203,6 +196,7 @@ public class Response implements Closeable {
             // or the file type of the current file isn't compressed by nature
             if (encoder != null && length > Config.COMPRESS_THRESHOLD) {
                 content = encoder.encode(byteArr, realLength);
+                realLength = content.length;
             }
 
             if (!isHeaderSent){
@@ -387,6 +381,10 @@ public class Response implements Closeable {
             }
 
             setHeader("Content-Type", mimeType + ";charset=utf-8");
+
+            // Prevent MIME sniffing
+            // https://en.wikipedia.org/wiki/Content_sniffing
+            setHeader("X-Content-Type-Options", "nosniff");
         }
 
         //Set the "dangerous" (not in the safe list) headers
@@ -424,7 +422,7 @@ public class Response implements Closeable {
      */
     private void sendResponseLine() throws IOException {
         //Compose and write the response line
-        String responseLine = "HTTP/" + req.getVersion() + " " + status + " " + HttpDes.statuses[status];
+        String responseLine = "HTTP/" + (req == null ? "1.1" : req.getVersion()) + " " + status + " " + HttpDes.statuses[status];
 
         oStream.write(responseLine.getBytes(StandardCharsets.UTF_8));
         oStream.write(Misc.CRLF);
@@ -516,7 +514,7 @@ public class Response implements Closeable {
      * @see #readWithRangeHeader(String, FileInputStream, byte[], int)
      * @see #send(byte[], int, Date, String, short)
      *
-     * @param dir The base directory of the file
+     * @param file The base directory of the file
      * @throws IOException i/o error when sending
      */
     private void readAndSendFile(File file) throws IOException {
