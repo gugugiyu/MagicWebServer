@@ -244,7 +244,7 @@ public class Response implements Closeable {
      * 
      * @see #redirect(String)
      *
-     * @param url the url to be redirected to
+     * @param url the url to be redirected to (in absolute form)
      * @param permanent tells if this redirect if pernament
      * @throws IOException when given url is invalid
      */
