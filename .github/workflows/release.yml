@@ -7,7 +7,7 @@ jobs:
   # Extract the project.version from the pom.xml file
   extract_version:
     outputs:
-      version_label:
+      version_label: ${{ steps.extract_version.outputs.version_label }}
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
         id: extract_version
         run: |
           version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "::set-output name=version_label::$version"
+          echo "{version_label}={$version}" >> $GITHUB_OUTPUT
 
   release:
     runs-on: ubuntu-latest
