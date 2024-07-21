@@ -63,7 +63,7 @@ jobs:
       uses: scacap/action-surefire-report@v1
 
   close_pr:
-    needs: test
+    needs: run-tests
     runs-on: ubuntu-latest
     if: failure()
 
