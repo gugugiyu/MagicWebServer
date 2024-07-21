@@ -6,7 +6,7 @@
 
     <groupId>com.github.magic</groupId>
     <artifactId>magic-ws</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <name>Magic web sever</name>
