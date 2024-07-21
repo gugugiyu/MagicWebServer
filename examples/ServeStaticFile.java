@@ -1,4 +1,4 @@
-package com.github.magic.examples;
+package examples;
 
 import com.github.magic.core.models.server.Server;
 import com.github.magic.core.path_handler.StaticFileHandler;

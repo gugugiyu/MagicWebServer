@@ -6,7 +6,7 @@
 
     <groupId>com.github.magic</groupId>
     <artifactId>magic-ws</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <name>Magic web sever</name>
@@ -35,16 +35,22 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
 
     <build>
+        <!-- Resources -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+
         <!-- Test resources -->
         <testResources>
             <testResource>
-                <directory>src/test/java</directory>
+                <directory>src/test/resources</directory>
                 <excludes>
                     <exclude>**/*.java</exclude>
                 </excludes>

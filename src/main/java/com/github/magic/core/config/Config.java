@@ -3,9 +3,9 @@ package com.github.magic.core.config;
 import com.github.magic.core.utils.VersionFinder;
 
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 public final class Config {
     private Config(){}
@@ -33,7 +33,7 @@ public final class Config {
     //The root directory of the server (the MagicWebServer directory)
     public static String ROOT_DIR = URLDecoder.decode(new File(Config.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParent(), StandardCharsets.UTF_8);
 
-    public static final String STATIC_DIR = ROOT_DIR + "\\src\\main\\resources\\data";
+    public static final String STATIC_DIR = ROOT_DIR + File.separator + Path.of("src", "main", "resources", "data");
 
     //Used for "Keep-Alive" header, "max" field
     public static final int MAX_SERVE_PER_CONNECTION = 100;
@@ -42,7 +42,7 @@ public final class Config {
     // Encoder config                     //
     ////////////////////////////////////////
 
-    public static final int ENCODER_BUFFER_SIZE = (1 << 11); //2048 bytes
+    public static final int ENCODER_BUFFER_SIZE = (1 << 15); //8192 bytes
 
     //Threshold used to determine whether an uncompressed file should be compressed based on its size
     public static final int COMPRESS_THRESHOLD = (1 << 15); //32768 bytes

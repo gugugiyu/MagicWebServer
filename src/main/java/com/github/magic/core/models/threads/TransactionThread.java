@@ -1,6 +1,7 @@
 package com.github.magic.core.models.threads;
 
 import com.github.magic.core.config.Config;
+import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.consts.HttpCode;
 import com.github.magic.core.consts.HttpMethod;
 import com.github.magic.core.middleware.Middleware;
@@ -63,7 +64,7 @@ public class TransactionThread implements Runnable, Closeable {
     }
 
     /**
-     * Should only be called when wish to interrupt the current thread after {@value Config#THREAD_TIMEOUT_DURATION} seconds (set by the @code THREAD_TIMEOUT_DURATION)
+     * Should only be called when wish to interrupt the current thread after {@link ServerConfig#getThreadTimeoutDuration()} seconds (set by the @code THREAD_TIMEOUT_DURATION)
      */
     @Override
     public void close() {
@@ -233,9 +234,9 @@ public class TransactionThread implements Runnable, Closeable {
     }
 
     /**
-     * Redirect
-     * @return
-     * @throws IOException
+     * Redirect into the HTTPS version of this server's hostname
+     * @return {@code true} if the redirect has been performed, or {@code false} otherwise
+     * @throws IOException Exception raised when performing the redirect
      */
     private boolean upgradeSecure() throws IOException {
         if (serverInstance instanceof SSLServer)

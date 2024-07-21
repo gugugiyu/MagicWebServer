@@ -1,0 +1,76 @@
+# This workflow run test cases using the maven surefire plugin
+# and generate reports as the artifact of the current run
+
+# Note that the report from surefire will generate even when all testcases have passed
+# This workflow will not be trigger when resource files (from the 'resources' directory) is added
+
+# Java version and platform to be tested (using matrix strategy):
+# Written in the following format: [OS version] - [Java version]
+
+# ubuntu-latest 17
+# windows-latest 17
+# ubuntu-latest 21
+# ubuntu-latest 21
+
+# Link to the github actions used in this workflow
+# -- Surefire report: https://github.com/marketplace/actions/surefire-report
+
+name: Test
+on:
+  push:
+    branches: ["dev"]
+    paths-ignore:
+      - ".github/**"
+      - "src/main/resources/**" #Ignore this workflow when adding resources
+  pull_request:
+    branches: ["dev"]
+    paths-ignore:
+      - ".github/**"
+      - "src/main/resources/**" #Ignore this workflow when adding resources
+
+jobs:
+  run-tests:
+    continue-on-error: true
+    strategy:
+      matrix:
+        java-version: [17, 21]
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }} #Run the permutation of OSes
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache local Maven repository
+      uses: actions/cache@v3
+      with:
+        key: dep-maven-${{ hashFiles('**/pom.xml') }}
+        path: ~/.m2/repository
+
+    - name: Set up JDK version
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Runs the testcases
+      id: maven-test
+      run: mvn clean test --batch-mode --fail-at-end
+
+    - name: Generate surefire report
+      if: failure() || success()
+      uses: scacap/action-surefire-report@v1
+
+  close_pr:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Close Pull Request
+        uses: peter-evans/close-pull-request@v2
+        with:
+          message: "Closing this PR as the tests have failed."
+          token: ${{ secrets.GITHUB_TOKEN }}
+

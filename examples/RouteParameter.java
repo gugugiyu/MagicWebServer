@@ -1,4 +1,4 @@
-package com.github.magic.examples;
+package examples;
 
 import com.github.magic.core.models.server.Server;
 
