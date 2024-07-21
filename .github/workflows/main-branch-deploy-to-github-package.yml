@@ -10,14 +10,8 @@ name: Maven Deploy CI
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main"]
-    paths-ignore:
-      - ".github/**"
-  pull_request:
-    branches: [ "main"]
-    paths-ignore:
-      - ".github/**"
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -50,8 +44,21 @@ jobs:
         path: |
           target/*.jar
 
+    - name: Set up Maven settings.xml file
+      run: |
+        mkdir -p ~/.m2
+        echo "<settings>
+                <servers>
+                  <server>
+                    <id>github</id>
+                    <username>${{ secrets.DEPLOY_USERNAME }}</username>
+                    <password>${{ secrets.DEPLOY_TOKEN }}</password>
+                  </server>
+                </servers>
+              </settings>" > ~/.m2/settings.xml
+
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+      run: mvn deploy -s ~/.m2//settings.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
 

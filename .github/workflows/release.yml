@@ -6,6 +6,8 @@ on:
 jobs:
   # Extract the project.version from the pom.xml file
   extract_version:
+    outputs:
+      version_label:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +24,7 @@ jobs:
         id: extract_version
         run: |
           version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "::set-output name=version_label::$version"
 
   release:
     runs-on: ubuntu-latest
@@ -38,9 +40,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }}
-          body: "Automatically generated release for version ${{ env.VERSION }}."
+          tag_name: ${{ needs.extract_version.outputs.version_label }}
+          release_name: ${{ needs.extract_version.outputs.version_label }}
+          body: "Automatically generated release for version ${{ needs.extract_version.outputs.version_label }}."
           draft: false
           prerelease: false
 
@@ -50,6 +52,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/magic-ws-${{ env.VERSION }}.jar
-          asset_name: magic-ws-${{ env.VERSION }}.jar
+          asset_path: target/magic-ws-${{ needs.extract_version.outputs.version_label }}.jar
+          asset_name: magic-ws-${{ needs.extract_version.outputs.version_label }}.jar
           asset_content_type: application/java-archive
