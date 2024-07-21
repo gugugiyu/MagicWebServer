@@ -62,5 +62,15 @@ jobs:
       if: failure() || success()
       uses: scacap/action-surefire-report@v1
 
+  close_pr:
+    needs: test
+    runs-on: ubuntu-latest
+    if: failure()
 
+    steps:
+      - name: Close Pull Request
+        uses: peter-evans/close-pull-request@v2
+        with:
+          message: "Closing this PR as the tests have failed."
+          token: ${{ secrets.GITHUB_TOKEN }}
 
