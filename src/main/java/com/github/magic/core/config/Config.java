@@ -57,11 +57,28 @@ public final class Config {
     // MISC config                        //
     ////////////////////////////////////////
 
+    //DEBUG mode
+    public static final boolean DEBUG = true;
+
     //Toggle verbose mode (shouldn't be used in case of server multi-threading as there's no synchronization process provided)
-    public static final boolean VERBOSE = Boolean.parseBoolean(System.getProperty("verbose") ) || Boolean.parseBoolean(System.getenv("verbose"));
+    public static final boolean VERBOSE = DEBUG || Boolean.parseBoolean(System.getProperty("verbose") ) || Boolean.parseBoolean(System.getenv("verbose"));
 
     //Toggle dump error to err stream behavior
-    public static final boolean SHOW_ERROR = Boolean.parseBoolean(System.getProperty("error") )|| Boolean.parseBoolean(System.getenv("error")) ;
+    public static final boolean SHOW_ERROR = DEBUG || Boolean.parseBoolean(System.getProperty("error") )|| Boolean.parseBoolean(System.getenv("error")) ;
 
     public static final int JAVA_VERSION = VersionFinder.getJavaMajorVersion();
+
+    ////////////////////////////////////////
+    // Caching config                     //
+    ////////////////////////////////////////
+
+    //The directory for the cache files to be stored and retrieved later
+    public static final String CACHE_DIR = ROOT_DIR + File.separator + Path.of("src", "main", "resources", "cache_files");
+
+    //The time (in seconds) it takes for any response to be considered stale
+    //and require a re-fetch to the server
+    public static final int RESPONSE_MAX_AGE = 604800; //1 week
+
+    //Max size of the cache (applies to all implementations of the cache)
+    public static final int MAX_CACHE_SIZE = (1 << 10);
 }

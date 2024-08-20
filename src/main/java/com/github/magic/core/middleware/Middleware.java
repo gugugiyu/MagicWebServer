@@ -3,6 +3,7 @@ package com.github.magic.core.middleware;
 import com.github.magic.core.models.Request;
 import com.github.magic.core.models.Response;
 
+@FunctionalInterface
 public interface Middleware {
     interface NextCallback{
         void next();

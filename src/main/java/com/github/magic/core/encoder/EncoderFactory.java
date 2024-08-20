@@ -3,13 +3,13 @@ package com.github.magic.core.encoder;
 import java.io.IOException;
 
 public class EncoderFactory {
-    public static boolean isImplemented(String encodingType) {
-        return switch (encodingType) {
-            case "gzip", "deflate" -> true;
-            default -> false;
-        };
-    }
-
+    /**
+     * Returns the encoder based on the given type of encoding
+     *
+     * @param encodingType the type of the encoder
+     * @return {@link Encoder} instance that was implemented, or {@code null} is the type given is invalid
+     * @throws IOException when open the output streams
+     */
     public static Encoder getEncoder(String encodingType) throws IOException {
         return switch (encodingType) {
             case "gzip" -> new GZIPEncoder();

@@ -1,7 +1,7 @@
 package core.models.server;
 
 import com.github.magic.core.models.server.Server;
-import com.github.magic.core.path_handler.StaticFileHandler;
+import com.github.magic.core.consts.path_handler.StaticFileHandler;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

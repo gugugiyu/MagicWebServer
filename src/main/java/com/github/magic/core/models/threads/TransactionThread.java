@@ -1,5 +1,6 @@
 package com.github.magic.core.models.threads;
 
+import com.github.magic.cache.Cache;
 import com.github.magic.core.config.Config;
 import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.consts.HttpCode;
@@ -11,16 +12,14 @@ import com.github.magic.core.models.header.Header;
 import com.github.magic.core.models.header.Headers;
 import com.github.magic.core.models.routing_tries.URITries;
 import com.github.magic.core.models.server.Server;
-import com.github.magic.core.path_handler.HandlerWithParam;
-import com.github.magic.core.path_handler.StaticFileHandler;
+import com.github.magic.core.consts.path_handler.HandlerWithParam;
+import com.github.magic.core.consts.path_handler.StaticFileHandler;
 import com.github.magic.core.utils.Formatter;
 import com.github.magic.core.utils.StreamTransfer;
 import com.github.magic.ssl.models.SSLServer;
 
 import javax.net.ssl.SSLSocket;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InterruptedIOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.*;
 
@@ -94,7 +93,7 @@ public class TransactionThread implements Runnable, Closeable {
             isHandshakeCompleted = true;
         }
 
-        HandlerWithParam handlerWithParam = new HandlerWithParam(null, null, null);
+        HandlerWithParam handlerWithParam;
 
         //The total amount of request, response cycle can be done through this connection
         int counter = Config.MAX_SERVE_PER_CONNECTION;
@@ -110,11 +109,25 @@ public class TransactionThread implements Runnable, Closeable {
                 req = new Request(sock);
 
                 //Protocol mismatched then close the connection immediately
-                if (req == null || req.isMismatched()) break;
+                if (req.isMismatched()) break;
 
-                res = new Response(req, 
+                res = new Response(
+                        req,
                         new int[]{Config.MAX_SERVE_PER_CONNECTION, serverInstance.getServerConfig().getThreadRequestReadTimeoutDuration()} ,
-                        isHandshakeCompleted);
+                        isHandshakeCompleted,
+                        serverInstance
+                );
+
+                if (serverInstance.getCache() != null){
+                    //Preprocess cache revalidation
+                    String eTag = getMatchedEtag();
+
+                    if (eTag != null){
+                        System.out.println("[+] Cache hit on: " + req.getPath().getPath());
+                        res.sendEtagMatched(eTag);
+                        break;
+                    }
+                }
 
                 //Only support from version 1.1 downwards
                 if (!compatibleHttpVersion() || upgradeSecure()) break;
@@ -156,6 +169,23 @@ public class TransactionThread implements Runnable, Closeable {
 
             counter--;
         } while (transactionContinue());
+    }
+
+    private String getMatchedEtag(){
+        Cache.CacheState cacheState;
+
+        String ifNoneMatch = req.getHeaders().find("If-None-Match");
+        String[] Etags = ifNoneMatch.split(", ", 0);
+
+        for (var Etag : Etags){
+            if (Etag.isBlank()) continue;
+
+            cacheState = serverInstance.getCache().exist(Etag.substring(1, Etag.length() - 1)); //Strips the double quote
+            if (cacheState == Cache.CacheState.FRESH || cacheState == Cache.CacheState.STALE)
+                return Etag;
+        }
+
+        return null;
     }
 
     /**
@@ -212,21 +242,21 @@ public class TransactionThread implements Runnable, Closeable {
 
             // RFC9112#3 - must return 414 if URI is too long
             if (t instanceof IOException && t.getMessage().contains("URI too long")){
-                res.sendError(HttpCode.URI_TOO_LONG);
+                res.sendStatus(HttpCode.URI_TOO_LONG);
                 return;
             }
 
             if (isHandshakeCompleted) 
-                res.sendError(HttpCode.BAD_REQUEST, "Invalid request: " + t.getMessage());
+                res.sendStatus(HttpCode.BAD_REQUEST, "Invalid request: " + t.getMessage());
         } else {
-            res.sendError(HttpCode.INTERNAL_SERVER_ERROR, "Server error :(\nHere's what happened: " + t.getMessage());
+            res.sendStatus(HttpCode.INTERNAL_SERVER_ERROR, "Server error :(\nHere's what happened: " + t.getMessage());
         }
     }
 
     private boolean compatibleHttpVersion(){
         if (!req.getVersion().startsWith("1")) {
             res.setHeader("Connection", "close");
-            res.sendError(HttpCode.HTTP_VERSION_NOT_SUPPORTED);
+            res.sendStatus(HttpCode.HTTP_VERSION_NOT_SUPPORTED);
             return false;
         }
 
@@ -266,9 +296,7 @@ public class TransactionThread implements Runnable, Closeable {
     private boolean transactionContinue(){
         String reqConnectionStatus = req.getHeaders().find("Connection");
 
-        return  reqConnectionStatus.isEmpty()
-                && !"close".equalsIgnoreCase(reqConnectionStatus)
-                && !req.getVersion().equalsIgnoreCase("1.0");
+        return reqConnectionStatus.isEmpty() && !req.getVersion().equalsIgnoreCase("1.0");
     }
 
     /**
@@ -302,6 +330,4 @@ public class TransactionThread implements Runnable, Closeable {
         if (req.getRequestSocket().getInputStream().available() > 0)
             StreamTransfer.transfer(req.getRequestSocket().getInputStream(), res.getOutputStream(), -1); // RFC9110#9.3.8 - client must not send content (but we echo it anyway)
     }
-
-
 }

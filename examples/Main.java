@@ -10,11 +10,6 @@ public class Main {
         //Serve "root" text at the root path
         app.get("/", (req, res) -> res.send("root"));
 
-        //Redirect all other path to the root path
-        app.get("/*", (req, res) -> {
-            res.redirect("http://localhost/");
-        });
-
         //Start up the server on port 80
         app.listen();
     }

@@ -3,6 +3,7 @@ package com.github.magic.core.models;
 import com.github.magic.core.config.Config;
 import com.github.magic.core.consts.HttpMethod;
 import com.github.magic.core.consts.Misc;
+import com.github.magic.core.models.header.AcceptHeader;
 import com.github.magic.core.models.header.Header;
 import com.github.magic.core.models.header.Headers;
 
@@ -52,7 +53,7 @@ public class Request {
      * @param socket the connection socket
      * @throws IllegalArgumentException when the request failed to parse the receive data
      * @throws SocketException when the request parse being invoked again with the do-while loop after finish the first request, response cycle
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public Request(Socket socket) throws IOException, SocketException, IllegalArgumentException {
         InputStream data = socket.getInputStream();
@@ -64,8 +65,8 @@ public class Request {
 
 
         extractRequestLine(data);
-        
-        if (isMismatched && Config.SHOW_ERROR) System.err.printf("[-] %s Error: Protocol mismatched\n", requestSocket.getInetAddress());
+
+        if (isMismatched) System.err.printf("[-] %s Error: Protocol mismatched\n", requestSocket.getInetAddress());
 
         if (!isMismatched){
             extractHeaders(data);
@@ -75,7 +76,7 @@ public class Request {
 
     /**
      * Get the request line of any request, typically looks like: "GET /testPath HTTP/1.1"
-     * 
+     *
      * @param iStream the input stream contain the request data
      * @throws IOException exception may raise when reading from the input stream
      */
@@ -149,7 +150,7 @@ public class Request {
 
     /**
      * Gets all the headers sent from the request and insert them into the {@link #headers} field
-     * 
+     *
      * @param iStream the input stream contain the request data
      * @throws IOException exception may raise when reading from the input stream
      */
@@ -175,7 +176,13 @@ public class Request {
                 //Index: 0        1
                 //Data : [key] :  [value]
 
-                headers.add(new Header(headerEntry[0], headerEntry[1]));
+                //Special header that serve the server-driven content-negotiation purpose will starts with "Accept-*"
+                //https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation
+
+                if (headerEntry[0].startsWith("Accept"))
+                    headers.add(new AcceptHeader(headerEntry[0], headerEntry[1]));
+                else
+                    headers.add(new Header(headerEntry[0], headerEntry[1]));
 
                 line = "";
             }
@@ -229,7 +236,7 @@ public class Request {
     public byte[] bodyRaw() {
         return content;
     }
-    
+
     public String body(Charset charset) {
         return new String(content, charset);
     }

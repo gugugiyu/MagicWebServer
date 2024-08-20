@@ -33,4 +33,7 @@
 - [ ] Websocket supported
 
 ### Caching
-- [ ] LRU cache support (WIP)
+- [ ] Caching system
+    - [x] LRU (Least recently used) cache
+    - [ ] LFU (Least frequently used) cache
+    - [ ] FIFO (First in, first out) cache

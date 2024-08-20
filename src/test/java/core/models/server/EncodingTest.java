@@ -39,6 +39,29 @@ public class EncodingTest extends HttpTest {
     }
 
     @Test
+    public void request_media_prefer_deflate_encoding_test() {
+        //The test is similar to the deflate case, however, by using the quality value, we ask the server to serve
+        //the deflate over gzip version
+        try {
+            Headers headers = new Headers();
+            headers.add(new Header("Accept-Encoding", "deflate, gzip;q=0.3"));
+
+            HttpURLConnection connection = TestUtils.getResponse(new URL(BASE_URL + "image.png"), HttpMethod.GET, headers);
+            Assert.assertEquals("Status code should be 200", HttpCode.OK, connection.getResponseCode());
+
+            String encoding = connection.getHeaderField("Content-Encoding");
+            Assert.assertEquals("Content-Encoding should be deflate", "deflate", encoding);
+
+            long actualFileLength = Files.size(Path.of(STATIC_DIR + "/img.png"));
+            long compressedFileLength = Long.parseLong(connection.getHeaderField("Content-Length"));
+
+            Assert.assertTrue("Compress file should be smaller than actual file", compressedFileLength < actualFileLength);
+        } catch (IOException e) {
+            Assert.fail("Exception raised: " + e.getMessage());
+        }
+    }
+
+    @Test
     public void request_media_gzip_encoding_test() {
         try {
             Headers headers = new Headers();

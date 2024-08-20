@@ -51,6 +51,20 @@ public class Headers implements Iterable<Header> {
     }
 
     /**
+     * Behave similarly to the {@link #find(String)} method. However, it returns the header itself instead of the string content
+     * @param key the key to look for
+     * @return {@code null} if not found, or else the found header
+     */
+    public Header findHeader(String key){
+        for (Header header : headers) {
+            if (header.key.equalsIgnoreCase(key))
+                return header;
+        }
+
+        return null;
+    }
+
+    /**
      * Write all fields of the current header list into the "key: value" format, CRLF end-of-line behavior
      * 
      * @param out the output stream to be write to

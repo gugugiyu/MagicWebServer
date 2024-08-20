@@ -1,20 +1,25 @@
 package com.github.magic.core.models.server;
 
+import com.github.magic.cache.Cache;
+import com.github.magic.cache.CacheEntry;
+import com.github.magic.cache.CacheFactory;
+import com.github.magic.cache.lru_cache.LRUCache;
 import com.github.magic.core.config.Config;
 import com.github.magic.core.config.ServerConfig;
 import com.github.magic.core.middleware.Middleware;
 import com.github.magic.core.models.routing_tries.URITries;
-import com.github.magic.core.models.threads.ShutdownThread;
 import com.github.magic.core.models.threads.TransactionThread;
-import com.github.magic.core.path_handler.Handler;
+import com.github.magic.core.consts.path_handler.Handler;
 import com.github.magic.ssl.models.SSLServer;
 
 import javax.net.ServerSocketFactory;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Server implements Runnable {
@@ -28,12 +33,16 @@ public class Server implements Runnable {
 
     private String upgradeInsecureRequestURL = "";
 
+    private final Cache cache;
+    private CacheFactory.CacheEvictionPolicy evictionPolicy = CacheFactory.CacheEvictionPolicy.LEAST_RECENTLY_USED;
+
 
     public Server(int port, URITries tries, ServerConfig serverConfig) {
         this.tries = tries;
         this.port = port;
         this.serverConfig = serverConfig;
         this.hostIP = serverConfig.getHostIp();
+        this.cache = CacheFactory.getCache(evictionPolicy);
     }
 
     //Default port for http is 80
@@ -59,6 +68,15 @@ public class Server implements Runnable {
 
     public synchronized void listen(int port) {
         this.port = port;
+
+        cache.cache("8px1o0-s", new CacheEntry(
+                Config.RESPONSE_MAX_AGE,
+                new Date(),
+                new File("C:\\Users\\magic\\Documents\\repo\\MagicWebServer\\src\\main\\resources\\data\\index.html").toPath(),
+                "gzip",
+                "en-US",
+                null
+        ));
 
         try {
             ServerSocket serverSocket;
@@ -87,7 +105,7 @@ public class Server implements Runnable {
                 threadPool.submitWithTimer(transactionThread, serverSocket);
             }
 
-            Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+            //Runtime.getRuntime().addShutdownHook(new ShutdownThread(cache));
         } catch (IOException e) {
             if (Config.SHOW_ERROR) System.err.println("[-] Exception occur. Using port: " + port);
         }
@@ -211,5 +229,18 @@ public class Server implements Runnable {
 
     public ServerConfig getServerConfig() {
         return serverConfig;
+    }
+
+    public Cache getCache() {
+        return cache;
+    }
+
+    /**
+     * Set the cache eviction policy
+     *
+     * @param evictionPolicy The policy type to be used for the cache ({@link com.github.magic.cache.CacheFactory.CacheEvictionPolicy} type)
+     */
+    public void setEvictionPolicy(CacheFactory.CacheEvictionPolicy evictionPolicy) {
+        this.evictionPolicy = evictionPolicy;
     }
 }

@@ -2,8 +2,8 @@ package com.github.magic.core.models.routing_tries;
 
 import com.github.magic.core.consts.HttpMethod;
 import com.github.magic.core.middleware.Middleware;
-import com.github.magic.core.path_handler.Handler;
-import com.github.magic.core.path_handler.HandlerWithParam;
+import com.github.magic.core.consts.path_handler.Handler;
+import com.github.magic.core.consts.path_handler.HandlerWithParam;
 
 import java.util.ArrayList;
 

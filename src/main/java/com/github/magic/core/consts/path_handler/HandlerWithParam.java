@@ -1,4 +1,4 @@
-package com.github.magic.core.path_handler;
+package com.github.magic.core.consts.path_handler;
 
 import com.github.magic.core.middleware.Middleware;
 
